@@ -314,7 +314,14 @@ static intptr_t dispatcher(AEffect *e, int32_t op, int32_t idx, intptr_t v, void
     case effGetVstVersion: return 2400;
     case effCanBeAutomated: return idx >= 0 && idx < NPARAMS;
     case effGetParamName:
-        if (idx >= 0 && idx < NPARAMS) copy_str(p, PARAMS[idx].name, 32);
+        if (idx >= 0 && idx < NPARAMS) {
+            char buf[64], k2[96];
+            /* "dynamic_name" params: the DSP may rename them (e.g. a drum machine's per-machine knob
+             * labels); MPC re-reads names on audioMasterUpdateDisplay (docs/NOTES.md). */
+            snprintf(k2, sizeof k2, "%s_name", PARAMS[idx].key);
+            if (PARAMS[idx].dynamic_name && g_api->get_param(w->dsp, k2, buf, sizeof buf) > 0) copy_str(p, buf, 32);
+            else copy_str(p, PARAMS[idx].name, 32);
+        }
         return 1;
     case effGetParamLabel:
         if (idx >= 0 && idx < NPARAMS) copy_str(p, PARAMS[idx].unit, 8);
