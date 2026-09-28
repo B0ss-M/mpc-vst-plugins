@@ -330,7 +330,11 @@ static intptr_t dispatcher(AEffect *e, int32_t op, int32_t idx, intptr_t v, void
         char buf[64];
         if (idx < 0 || idx >= NPARAMS) return 0;
         const param_t *pp = &PARAMS[idx];
-        if (pp->nopts) {
+        char k2[96];
+        snprintf(k2, sizeof k2, "%s_display", pp->key);
+        if (pp->dynamic_display && g_api->get_param(w->dsp, k2, buf, sizeof buf) > 0) {
+            copy_str(p, buf, 24);   /* text the DSP composes (e.g. a destination's own name) */
+        } else if (pp->nopts) {
             int k = (int)lroundf(get_norm(w, idx) * (pp->nopts - 1));
             copy_str(p, pp->opts[k], 24);
         } else if (g_api->get_param(w->dsp, pp->key, buf, sizeof buf) > 0) {
