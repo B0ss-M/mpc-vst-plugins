@@ -298,15 +298,19 @@ LABEL_SCALE = 1.15   # was 1.5: the baked bitmap font (font8x8.h) IS mixed-case 
                       # own and doesn't change.
 
 
-def label_cmds(w):
+def label_cmds(w, title_font=None):
     """Static text baked into the page background. knob/toggle/slider names come from a
     native Label 'Name' component instead (device-rendered Titillium Web -- see build()'s
     knob/toggle/slider defs and _name_label()), so this only bakes text where there's no
     single parameter index a native Name label could bind to: frame titles, group labels on
-    enum_h/enum_v (whose per-OPTION segment text has no such binding either)."""
+    enum_h/enum_v (whose per-OPTION segment text has no such binding either). When title_font
+    is set, the enum_h/enum_v group label is skipped here and drawn with the real font instead
+    (build()'s decor/title-overlay pass, which already does this for frame titles)."""
     k, lab = w["kind"], w.get("label", "")
     if not lab or k in ("knob", "toggle", "slider_v", "slider_h"):
         return []   # an empty TEXT field is swallowed by shadow_art's strtok, so skip the command entirely
+    if title_font and k in ("enum_h", "enum_v"):
+        return []
     s = LABEL_SCALE
     if k == "enum_h":
         return ["text|%d|%d|%s|%s|%s" % (w["cx"], w["cy"] - 33 // 2 - 22, s, INK, lab)]
@@ -354,7 +358,7 @@ def baked_cmds(w, title_font=None, base_dir="."):
     elif w["kind"] == "list":
         for (x, y, tw, th) in list_tiles(w):
             cmds.append("tile|%d|%d|%d|%d|%s|%s|0" % (x, y, tw, th, LCD, LINE))
-    return cmds + label_cmds(w)
+    return cmds + label_cmds(w, title_font)
 
 
 def baked_rect(w):
@@ -460,6 +464,10 @@ def build(layout_path, params, skin_dir, art_bin, png_from_ppm):
     TITLE_FONT = os.environ.get("SHADOW_TITLE_FONT")
     decor = []    # (image, origin x, origin y, widgets): real-font titles and popup chevrons drawn after the PNG exists
     tagged = []   # [first, end (None: up to the last), widget]: a tab's when= widgets' components in kids
+    label_overlays = []  # (final png path, w, h, text, hex colour): button/enum option text drawn with
+                          # TITLE_FONT afterward, same idea as decor's frame titles -- see the button/
+                          # enum_h/enum_v blocks below, which bake "" instead of the real label when
+                          # TITLE_FONT is set so the baked bitmap font never shows through underneath.
 
     def cond(w):
         """when=<param>:<option> -> the IndexedEnabling handle that shows w only in that mode (None: always)."""
@@ -653,11 +661,17 @@ def build(layout_path, params, skin_dir, art_bin, png_from_ppm):
                 x, y, bw, bh = button_rect(w, base_dir)
                 img = "sh_btn_%s_%s%s" % (w["key"], slug(w.get("label", "")), sfx)
                 base = w.get("color") or BTN_BG or ACCENT
+                # shadow_art's "button" command has no '-' -> empty convention (unlike frame/
+                # readout/stepper) and strtok() would collapse a genuinely empty field anyway,
+                # so a single space is the baked placeholder when the real label is drawn later.
+                baked_label = " " if TITLE_FONT else w.get("label", "")
                 for state, col in (("off", base), ("on", shade(base, 1.35))):
-                    draw = ("lbtn|%d|%d|%d|%d|%d|%s|%s" % (x, y, bw, bh, state == "on", w.get("label", ""), skin_assets.encode(lk))
-                            if lk else "button|%d|%d|%s|%s" % (w["cx"], w["cy"], col, w["label"]))
-                    script += ["clear|" + under(), draw,
-                               "crop|%s|%d|%d|%d|%d" % (art("%s_%s" % (img, state)), x, y, bw, bh)]
+                    draw = ("lbtn|%d|%d|%d|%d|%d|%s|%s" % (x, y, bw, bh, state == "on", baked_label, skin_assets.encode(lk))
+                            if lk else "button|%d|%d|%s|%s" % (w["cx"], w["cy"], col, baked_label))
+                    ppm = art("%s_%s" % (img, state))
+                    script += ["clear|" + under(), draw, "crop|%s|%d|%d|%d|%d" % (ppm, x, y, bw, bh)]
+                    if TITLE_FONT and w.get("label"):
+                        label_overlays.append((ppms[-1][1], bw, bh, w["label"], "fdf3ea"))
                 key = "shTrig_%s_%s%s" % (w["key"], slug(w.get("label", "")), sfx)
                 defs[key] = _local(key, [_action("Mouse Down", "Q-Link"), _action("Enter Pressed", "Toggle Switch")],
                                    [_focus(bw, bh), _button(img + "_on.png", img + "_off.png", 1, 1, bw, bh)])
@@ -805,12 +819,15 @@ def build(layout_path, params, skin_dir, art_bin, png_from_ppm):
                 for o, (x, y, sw, sh) in enumerate(seg_rects(w)):
                     img = "sh_seg_%s_%d" % (w["key"], o)
                     lab = w["options"][o]
+                    baked_lab = " " if TITLE_FONT else lab   # see the button block's comment on this placeholder
                     for state, fill, ink in (("on", SEG_ON, SEG_ON_TX), ("off", SEG_OFF, INK_DIM)):
                         draw = ("lseg|%d|%d|%d|%d|%d|%s|%s|%s" % (x, y, sw, sh, state == "on", SEG_ON_TX if state == "on" else INK,
-                                                                   lab, skin_assets.encode(lk))
-                                if lk else "seg|%d|%d|%d|%d|%s|%s|%s" % (x, y, sw, sh, fill, ink, lab))
-                        script += ["clear|" + under(), draw,
-                                   "crop|%s|%d|%d|%d|%d" % (art("%s_%s" % (img, state)), x, y, sw, sh)]
+                                                                   baked_lab, skin_assets.encode(lk))
+                                if lk else "seg|%d|%d|%d|%d|%s|%s|%s" % (x, y, sw, sh, fill, ink, baked_lab))
+                        ppm = art("%s_%s" % (img, state))
+                        script += ["clear|" + under(), draw, "crop|%s|%d|%d|%d|%d" % (ppm, x, y, sw, sh)]
+                        if TITLE_FONT and lab:
+                            label_overlays.append((ppms[-1][1], sw, sh, lab, SEG_ON_TX if state == "on" else INK_DIM))
                     key = "shSeg_%s_%d" % (w["key"], o)
                     defs[key] = _local(key, [_action("Mouse Down", "Q-Link")],
                                        [_button(img + "_on.png", img + "_off.png", o, n, sw, sh)])
@@ -859,7 +876,8 @@ def build(layout_path, params, skin_dir, art_bin, png_from_ppm):
     for img, ox, oy, ws in decor:
         titles = [w for w in ws if TITLE_FONT and w["kind"] == "frame" and w.get("title")]
         pops = [w for w in ws if w["kind"] == "popup"]
-        if not titles and not pops:
+        groups = [w for w in ws if TITLE_FONT and w["kind"] in ("enum_h", "enum_v") and w.get("label")]
+        if not titles and not pops and not groups:
             continue
         from PIL import Image, ImageDraw, ImageFont
         path = os.path.join(skin_dir, img + ".png")
@@ -868,10 +886,30 @@ def build(layout_path, params, skin_dir, art_bin, png_from_ppm):
         for w in titles:
             dr.text((w["x"] + 18 - ox, w["y"] + 8 - oy), w["title"], font=ImageFont.truetype(TITLE_FONT, 26),
                     fill="#" + ACCENT_HI)
+        group_font = ImageFont.truetype(TITLE_FONT, 18)
+        for w in groups:   # enum_h/enum_v's own group label -- see label_cmds()'s title_font branch
+            if w["kind"] == "enum_h":
+                gx, gy, color = w["cx"], w["cy"] - 33 // 2 - 22, INK
+            else:
+                n = len(w["options"])
+                gx, gy, color = w["cx"], w["cy"] - (n * 32) // 2 - 24, ACCENT_HI
+            tb = dr.textbbox((0, 0), w["label"], font=group_font)
+            tw, th = tb[2] - tb[0], tb[3] - tb[1]
+            dr.text((gx - ox - tw / 2 - tb[0], gy - oy - th / 2 - tb[1]), w["label"], font=group_font, fill="#" + color)
         for w in pops:   # the field's "opens a list" marker
             x, y = w["cx"] + w["w"] // 2 - 22 - ox, w["cy"] - oy
             dr.polygon([(x - 8, y - 4), (x + 8, y - 4), (x, y + 5)], fill="#" + ACCENT)
         im.save(path)
+    if label_overlays:
+        from PIL import Image, ImageDraw, ImageFont
+        for path, w_px, h_px, text, color in label_overlays:
+            im = Image.open(path).convert("RGB")
+            dr = ImageDraw.Draw(im)
+            font = ImageFont.truetype(TITLE_FONT, max(10, int(h_px * 0.42)))
+            tb = dr.textbbox((0, 0), text, font=font)
+            tw, th = tb[2] - tb[0], tb[3] - tb[1]
+            dr.text(((w_px - tw) / 2 - tb[0], (h_px - th) / 2 - tb[1]), text, font=font, fill="#" + color)
+            im.save(path)
     for img, sw_, sh_, vert, lid in sliders:
         square_strip(os.path.join(skin_dir, img + ".png"), sw_, sh_)
     for f in os.listdir(work):
