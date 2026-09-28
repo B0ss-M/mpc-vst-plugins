@@ -200,7 +200,7 @@ def widget_svg(w, art, params, base_dir):
         for f in [x.strip() for x in w.get("files", "").split(",") if x.strip()]:
             path = os.path.join(base_dir, f)
             alts.append(art.image(path, w["x"], w["y"], w["w"], w["h"], w.get("fit", "contain")) if os.path.isfile(path) else "")
-    elif k in ("frame", "readout", "stepper", "menu", "popup", "list"):
+    elif k in ("frame", "readout", "stepper", "menu", "popup", "list", "text"):
         for c in ss.baked_cmds(w, None, base_dir):
             art.run(c)
     if k == "knob":

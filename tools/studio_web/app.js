@@ -14,13 +14,13 @@ const CONTROLS = ["knob", "slider_v", "slider_h", "toggle", "button", "enum_h", 
 const PALETTE = [
   ["knob", "Knob"], ["slider_v", "V slider"], ["slider_h", "H slider"], ["toggle", "Toggle"], ["button", "Button"],
   ["enum_v", "Selector ↕"], ["enum_h", "Segments ↔"], ["popup", "Popup"], ["readout", "Readout"], ["stepper", "Stepper"],
-  ["list", "List"], ["menu", "Menu"], ["frame", "Frame"], ["picture", "Picture"], ["meter", "Meter"],
+  ["list", "List"], ["menu", "Menu"], ["frame", "Frame"], ["picture", "Picture"], ["meter", "Meter"], ["text", "Text"],
 ];
 const TEMPLATE = {   // new widgets, centred on the plugin area (the fields of tools/skin_template.conf)
   knob: { r: 36 }, slider_v: { w: 40, h: 170 }, slider_h: { w: 200, h: 36 }, toggle: {}, button: {},
   enum_v: {}, enum_h: {}, readout: { w: 300, h: 40 }, popup: { w: 220, h: 40 }, stepper: { w: 300, h: 52 },
   menu: { w: 220, h: 40 }, list: { w: 600, h: 188, cols: 2, rows: 4, th: 44, gap: 4 }, frame: { w: 400, h: 300 },
-  picture: { w: 200, h: 120 }, meter: { w: 24, h: 120 },
+  picture: { w: 200, h: 120 }, meter: { w: 24, h: 120 }, text: { label: "TEXT" },
 };
 const BOXED = ["frame", "list", "picture"];   // placed by their top-left corner (x=, y=); the rest by their centre
 // inspector fields per kind: [field, label, type]; types: n (int), on (optional int), s (text), key, opts, when, sel:<a,b>, color, file
@@ -32,6 +32,7 @@ const GEOM = {
   button: [["cx", "centre x", "n"], ["cy", "centre y", "n"], ["w", "image width", "on"], ["h", "image height", "on"]],
   picture: [["x", "x", "n"], ["y", "y", "n"], ["w", "width", "n"], ["h", "height", "n"]],
   enum_v: [["cx", "centre x", "n"], ["cy", "centre y", "n"]],
+  text: [["cx", "centre x", "n"], ["cy", "centre y", "n"]],
   enum_h: [["cx", "centre x", "n"], ["cy", "centre y", "n"], ["sw", "segment width", "on"], ["rows", "rows", "on"]],
   popup: [["cx", "centre x", "n"], ["cy", "centre y", "n"], ["w", "width", "n"], ["h", "height", "n"], ["cols", "list columns", "on"]],
   art: [["x", "x", "on"], ["y", "y", "on"], ["w", "width", "on"], ["h", "height", "on"]],
@@ -52,6 +53,7 @@ const TEXT = {
             ["prev", "prev parameter (default <key>_prev)", "key"], ["next", "next parameter (default <key>_next)", "key"],
             ["get", "text from parameter (optional)", "key"]],
   list: [["key", "row parameters (<key>_1 … <key>_N)", "s"]],
+  text: [["label", "text", "s"], ["size", "size (1.5 = default)", "s"], ["color", "colour", "color"]],
 };
 for (const k of ["knob", "slider_v", "slider_h", "toggle", "menu", "meter"]) TEXT[k] = [["label", "label", "s"], ["key", "parameter", "key"]];
 const LOOK_ATTRS = ["look", "img", "img_on", "base", "strip", "frames", "peak", "rms"];
@@ -555,6 +557,7 @@ function addWidget(kind) {
   if (BOXED.includes(kind)) Object.assign(w, { x: cx - t.w / 2, y: cy - t.h / 2 }, t);
   else Object.assign(w, { cx, cy }, t);
   if (kind === "frame") w.title = "FRAME";
+  else if (kind === "text") { /* free-standing, no parameter: label comes from TEMPLATE.text */ }
   else {
     const used = usedKeys();
     const free = params().filter(p => !used.has(p.key) && !p.key.endsWith("__open"));

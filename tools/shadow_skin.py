@@ -8,6 +8,10 @@ backgrounds, knob filmstrips and button states; MPC draws live values.
 Layout file:
     [tab NAME]
     frame   x= y= w= h= title="..."
+    text    cx= cy= label="..." [size=1.5] [color=<hex>]   (free-standing static text, centred on cx,cy;
+                                                        not bound to any parameter. size is a scale
+                                                        multiplier (1.5 default, matches label text);
+                                                        color defaults to theme_ink)
     knob    cx= cy= r= label="..." key=<param>
     toggle  cx= cy= label="..." key=<param>
     button  cx= cy= label="..." key=<param>          (trigger)
@@ -364,6 +368,10 @@ def baked_cmds(w, title_font=None, base_dir="."):
     elif w["kind"] == "list":
         for (x, y, tw, th) in list_tiles(w):
             cmds.append("tile|%d|%d|%d|%d|%s|%s|0" % (x, y, tw, th, LCD, LINE))
+    elif w["kind"] == "text":
+        size = float(w.get("size", 1.5))
+        color = w.get("color", INK)
+        cmds.append("text|%d|%d|%s|%s|%s" % (w["cx"], w["cy"], size, color, w.get("label", "")))
     return cmds + label_cmds(w, title_font)
 
 
@@ -385,6 +393,10 @@ def baked_rect(w):
         lw = text_width(w["label"], LABEL_SCALE)
         x0, x1 = min(x0, w["cx"] - lw // 2), max(x1, w["cx"] + lw // 2)
         return (x0 - 4, y0 - 48, x1 - x0 + 8, 48)
+    if k == "text":
+        lw = text_width(w.get("label", ""), float(w.get("size", 1.5)))
+        th = int(16 * float(w.get("size", 1.5)))
+        return (w["cx"] - lw // 2 - 4, w["cy"] - th // 2 - 4, lw + 8, th + 8)
     return None
 
 
