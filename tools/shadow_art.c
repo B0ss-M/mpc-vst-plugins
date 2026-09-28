@@ -175,10 +175,10 @@ int main(void) {
             draw_text_c(x + w / 2, y + h / 2 - 6, a[7], 1.15f, HEX(a[6]));   /* was 1.5f, see shadow_skin.py's LABEL_SCALE */
         }
         else if (!strcmp(op, "theme") && n == 2) load_conf(a[1]);
-        else if (!strcmp(op, "readout") && n == 6) widget_readout(atoi(a[1]), atoi(a[2]), atoi(a[3]), atoi(a[4]), a[5][0] == '-' ? "" : a[5], "");
-        else if (!strcmp(op, "stepper") && n == 6) widget_stepper(atoi(a[1]), atoi(a[2]), atoi(a[3]), atoi(a[4]), a[5][0] == '-' ? "" : a[5], "");
-        else if (!strcmp(op, "dotreadout") && n == 6) dot_readout(atoi(a[1]), atoi(a[2]), atoi(a[3]), atoi(a[4]), a[5][0] == '-' ? "" : a[5]);
-        else if (!strcmp(op, "dotstepper") && n == 6) dot_stepper(atoi(a[1]), atoi(a[2]), atoi(a[3]), atoi(a[4]), a[5][0] == '-' ? "" : a[5]);
+        else if (!strcmp(op, "readout") && (n == 6 || n == 7)) widget_readout(atoi(a[1]), atoi(a[2]), atoi(a[3]), atoi(a[4]), a[5][0] == '-' ? "" : a[5], "");
+        else if (!strcmp(op, "stepper") && (n == 6 || n == 7)) widget_stepper(atoi(a[1]), atoi(a[2]), atoi(a[3]), atoi(a[4]), a[5][0] == '-' ? "" : a[5], "");
+        else if (!strcmp(op, "dotreadout") && (n == 6 || n == 7)) dot_readout(atoi(a[1]), atoi(a[2]), atoi(a[3]), atoi(a[4]), a[5][0] == '-' ? "" : a[5]);
+        else if (!strcmp(op, "dotstepper") && (n == 6 || n == 7)) dot_stepper(atoi(a[1]), atoi(a[2]), atoi(a[3]), atoi(a[4]), a[5][0] == '-' ? "" : a[5]);
         else if (!strcmp(op, "tile") && n == 8) {
             int x = atoi(a[1]), y = atoi(a[2]), w = atoi(a[3]), h = atoi(a[4]), bw = atoi(a[7]);
             fill_rect(x, y, w, h, HEX(a[5]));

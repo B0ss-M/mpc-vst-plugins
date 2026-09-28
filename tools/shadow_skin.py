@@ -15,13 +15,16 @@ Layout file:
     enum_v  cx= cy= label="..." key=<param> [options="A,B,.."]   (options default to the param's)
     slider_v cx= cy= w= h= label="..." key=<param>     (vertical slider; value text below)
     slider_h cx= cy= w= h= label="..." key=<param>     (horizontal slider; value text below)
-    readout cx= cy= w= h= label="..." key=<param>      (live value text)
+    readout cx= cy= w= h= label="..." key=<param> [label_align=center]   (live value text;
+                                                        label_align=center needs the browser renderer, "art": "html")
     menu    cx= cy= w= h= label="..." key=<param>      (value text; tap opens MPC's native picker -- which
                                                          opens EMPTY for a VST2, see docs/NOTES.md; use popup)
     popup   cx= cy= w= h= label="..." key=<param> [options="A,B,.."] [cols=<n>]
                                                        (value text; tap opens a drawn option list, a pick closes it.
                                                         Needs the hidden "<param>__open" param: popup_params())
-    stepper cx= cy= w= h= label="..." key=<param>      (live text; arrows = <param>_prev / <param>_next)
+    stepper cx= cy= w= h= label="..." key=<param> [label_align=center]   (live text;
+                                                        arrows = <param>_prev / <param>_next;
+                                                        label_align=center needs "art": "html")
     list    x= y= w= h= cols= rows= th= gap= key=<p>   (rows = params <p>_1..<p>_N: text + tap)
     art     file="drawing.svg" [x= y= w= h=] [fit=]    (an SVG drawing, e.g. from studio.py from-svg, or a .png/.jpg/.webp
                                                         image, drawn into the page background: the whole plugin area, or
@@ -354,7 +357,10 @@ def baked_cmds(w, title_font=None, base_dir="."):
         op = "readout" if w["kind"] in ("menu", "popup") else w["kind"]
         if w["kind"] in ("readout", "stepper") and w.get("style") == "dotmatrix":
             op = "dot" + op
-        cmds.append("%s|%d|%d|%d|%d|%s" % (op, w["cx"], w["cy"], w["w"], w["h"], w.get("label") or "-"))
+        cmd = "%s|%d|%d|%d|%d|%s" % (op, w["cx"], w["cy"], w["w"], w["h"], w.get("label") or "-")
+        if w.get("label_align") == "center":   # only sent when non-default: keeps the wire
+            cmd += "|center"                   # format backward-compatible with shadow_art.c
+        cmds.append(cmd)
     elif w["kind"] == "list":
         for (x, y, tw, th) in list_tiles(w):
             cmds.append("tile|%d|%d|%d|%d|%s|%s|0" % (x, y, tw, th, LCD, LINE))

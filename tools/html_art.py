@@ -334,8 +334,12 @@ class Art:
         o = self.lit(look, on, x, y, w, h, "stretch") + self.text(x + w / 2, y + h / 2, label, "seg-tx")
         return '<g class="seg look-image%s" style="--ink:%s">%s</g>' % (" on" if on else "", hexc(ink), o)
 
-    def box_label(self, x0, y0, label):
-        return self.text(x0, y0 - 15, label, "box-label", "start") if label else ""
+    def box_label(self, x0, y0, label, align="left", w=0):
+        if not label:
+            return ""
+        if align == "center":
+            return self.text(x0 + w / 2, y0 - 15, label, "box-label", "middle")
+        return self.text(x0, y0 - 15, label, "box-label", "start")
 
     def arrow(self, cx, cy, size, d, cls):
         b = cx - d * size
@@ -405,10 +409,11 @@ class Art:
             self.ops.append('<g class="seg" style="--fill:%s;--ink:%s"><rect class="seg-bg" x="%d" y="%d" width="%d" height="%d"/>'
                             '<rect class="seg-sheen" x="%d" y="%d" width="%d" height="%d"/>%s</g>' % (
                                 hexc(a[5]), hexc(a[6]), x, y, w, h, x, y, w, h, self.text(x + w / 2, y + h / 2, a[7], "seg-tx")))
-        elif op in ("readout", "stepper", "dotreadout", "dotstepper") and n == 6:
+        elif op in ("readout", "stepper", "dotreadout", "dotstepper") and n in (6, 7):
             cx, cy, w, h = I(1), I(2), I(3), I(4)
             x0, y0 = cx - w // 2, cy - h // 2
-            o = self.box_label(x0, y0, "" if a[5] == "-" else a[5])
+            align = a[6] if n == 7 else "left"   # label_align=center on the layout line
+            o = self.box_label(x0, y0, "" if a[5] == "-" else a[5], align, w)
             if op == "readout":
                 o += '<rect class="box" x="%g" y="%g" width="%d" height="%d"/>' % (x0 + 0.5, y0 + 0.5, w - 1, h - 1)
             elif op == "stepper":
