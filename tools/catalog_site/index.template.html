@@ -131,7 +131,7 @@ function card(p) {
   if (p.style) tags.push('<span class="tag">' + esc(title(p.style)) + '</span>');
   tags.push('<span class="tag">' + esc(p.license) + '</span>');
   if (p.source_available) tags.push('<span class="tag warn" title="Source is public but the license limits how it may be used">Restricted use</span>');
-  (p.tags || []).forEach(function (t) { tags.push('<span class="tag">' + esc(t) + '</span>'); });
+  (p.tags || []).forEach(function (t) { if (!(by && t === "firmware-derived")) tags.push('<span class="tag">' + esc(t) + '</span>'); });
   var hist = p.versions.length ? '<details class="vers"><summary>Versions (' + p.versions.length + ')</summary><table>' + p.versions.map(function (x) {
     var cols = by ? '<td><a href="' + esc(safeUrl(x.source_url)) + '">tag ' + esc(x.tag) + '</a></td>' : '<td>' + size(x.size) + '</td><td title="sha256 ' + esc(x.sha256) + '">' + esc(x.sha256.slice(0, 10)) + '</td>';
     return '<tr class="' + (x.yanked ? "y" : "") + '"><td>v' + esc(x.version) + '</td><td>' + esc(x.date) + '</td><td>' + esc(x.channel) + (x.yanked ? ", yanked" : "") + '</td>' + cols + '</tr>';
@@ -141,15 +141,19 @@ function card(p) {
     '<div class="tags">' + tags.join("") + '</div><p>' + esc(p.summary) + '</p>';
   if (by) {
     var b = p.build, docs = safeUrl(b.docs_url.replace("{tag}", v ? v.tag : "HEAD"));
+    var names = p.requires_user_files.map(function (f) { return esc(f.name); }).join("; ");
+    var comps = (p.components || []).length > 1;
+    var hasMore = comps || p.requires_user_files.some(function (f) { return f.description; }) || (b.needs || []).length;
+    var tested = v ? (v.tested && v.tested.length ? v.tested.map(function (t) { return esc(t.device + (t.firmware ? " " + t.firmware : "") + (t.date ? " (" + t.date + ")" : "")); }).join(", ") : "not reported") : "";
     return head +
-      '<div class="need"><h3>You need</h3><ul>' + p.requires_user_files.map(function (f) { return '<li><strong>' + esc(f.name) + '</strong>: ' + esc(f.description) + '</li>'; }).join("") + '</ul>' +
-      ((b.needs || []).length ? '<p class="also">Also needs: ' + b.needs.map(esc).join(", ") + '.</p>' : '') +
-      '<h3>Build with</h3><pre class="cmd"><code>' + esc(b.command) + '</code></pre></div>' +
+      '<p class="needline"><strong>You need:</strong> ' + names + '</p>' +
+      '<pre class="cmd"><code>' + esc(b.command) + '</code></pre>' +
+      (hasMore ? '<details class="how"><summary>Details and other requirements</summary><ul>' + p.requires_user_files.map(function (f) { return '<li><strong>' + esc(f.name) + '</strong>: ' + esc(f.description) + '</li>'; }).join("") + '</ul>' +
+        ((b.needs || []).length ? '<p class="also">Also needs: ' + b.needs.map(esc).join(", ") + '.</p>' : '') +
+        (comps ? '<p class="also">Installs: ' + p.components.map(function (c) { return esc(c.name + " (" + c.kind + ")"); }).join(", ") + '.</p>' : '') + '</details>' : '') +
       '<p class="fw" role="note">' + esc(BY_WARNING) + '</p>' +
-      '<dl class="meta"><dt>Updated</dt><dd>' + esc(p.updated || "n/a") + '</dd>' +
-      ((p.components || []).length ? '<dt>Installs</dt><dd>' + p.components.map(function (c) { return esc(c.name + " (" + c.kind + ")"); }).join(", ") + '</dd>' : '') +
-      testedRow(v) + '<dt>Source</dt><dd>' + esc(p.repo) + '</dd></dl>' +
-      '<div class="actions"><a class="btn-l primary" href="' + esc(docs) + '">Build instructions</a>' +
+      '<p class="line">Updated ' + esc(p.updated || "n/a") + (v ? ' &middot; Tested on: ' + tested : '') + '</p>' +
+      '<div class="actions"><a class="btn-l primary" href="' + esc(docs) + '">How to build</a>' +
       '<a class="btn-l" href="https://github.com/' + esc(p.repo) + '">Source</a></div>' + hist + '</article>';
   }
   return head +

@@ -1,6 +1,6 @@
 { "id": "machinedrum-module", "name": "Machinedrum Module", "author": "sd88me", "repo": "sd88me/mpc-vst-machinedrum",
   "kind": "instrument", "style": "drum-machine", "tags": ["elektron", "machinedrum", "firmware-derived"], "license": "AGPL-3.0-only",
-  "summary": "The Elektron Machinedrum SPS-1 UW sound engine as a native instrument: all 16 tracks play from one plugin instance, with its own touchscreen skin and Q-Links. Built by you from your own Machinedrum files.",
+  "summary": "The Elektron Machinedrum SPS-1 UW sound engine as a native instrument: all 16 tracks from one plugin instance, with its own touchscreen skin and Q-Links.",
   "distribution": "build-yourself",
   "requires_user_files": [
     { "name": "Elektron_SPS1-1UW_OS1.63.syx", "description": "Your own Machinedrum UW OS 1.63 file. This is the sound engine, recompiled into your build." },
