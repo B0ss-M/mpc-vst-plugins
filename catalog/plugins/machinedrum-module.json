@@ -1,0 +1,17 @@
+{ "id": "machinedrum-module", "name": "Machinedrum Module", "author": "sd88me", "repo": "sd88me/mpc-vst-machinedrum",
+  "kind": "instrument", "style": "drum-machine", "tags": ["elektron", "machinedrum", "firmware-derived"], "license": "AGPL-3.0-only",
+  "summary": "The Elektron Machinedrum SPS-1 UW sound engine as a native instrument: all 16 tracks play from one plugin instance, with its own touchscreen skin and Q-Links. Built by you from your own Machinedrum files.",
+  "distribution": "build-yourself",
+  "requires_user_files": [
+    { "name": "Elektron_SPS1-1UW_OS1.63.syx", "description": "Your own Machinedrum UW OS 1.63 file. This is the sound engine, recompiled into your build." },
+    { "name": "Machinedrum UW flash image (.bin)", "description": "Your own full 8 MB flash image, used once at build time for the factory kits and the ROM sample memory." }
+  ],
+  "build": {
+    "command": "release/build_release.sh <Elektron_SPS1-1UW_OS1.63.syx> <flash-image.bin> [-v ver] [-d <device-ip>]",
+    "script": "release/build_release.sh",
+    "docs_url": "https://github.com/sd88me/mpc-vst-machinedrum/blob/{tag}/README.md#building",
+    "needs": ["Docker", "mdProbe (see tools/mdtrace/README.md in the repo)", "mpc-vst-monomodule's vst/build/art.json (the LCD fonts, made from your own Monomachine OS)", "ssh and scp (only with -d)"]
+  },
+  "components": [
+    { "id": "machinedrum-module", "name": "Machinedrum Module", "kind": "instrument", "uid": "MdOn" }
+  ] }
