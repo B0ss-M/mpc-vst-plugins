@@ -2,6 +2,29 @@
 
 Native plugins for **Akai MPC OS standalone devices** (MPC Live/One/X/Key, Force).
 
+## Plugin catalog
+
+**[MPC OS Plugin Catalog](https://sd88me.github.io/mpc-vst-plugins/)**: one browsable list of the community's VST2
+plugins for MPC OS, with each plugin's current version, license, source link and a checksummed download.
+
+[![The MPC OS Plugin Catalog home page](docs/img/catalog-home.png)](https://sd88me.github.io/mpc-vst-plugins/)
+
+- **Find a plugin.** Search, filter by kind, style, developer, license or distribution, and sort by recently updated or
+  most downloaded. Every version shows its date and SHA-256, and what it was tested on. There is an Atom feed
+  (`feed.xml`) of new releases.
+- **Guides on the site:** [install a downloaded plugin](https://sd88me.github.io/mpc-vst-plugins/install.html),
+  [build a plugin](https://sd88me.github.io/mpc-vst-plugins/build.html), the
+  [release workflow](https://sd88me.github.io/mpc-vst-plugins/workflow.html) and
+  [how to get yours listed](https://sd88me.github.io/mpc-vst-plugins/add.html).
+- **Get your plugin listed.** Publish a GitHub release built with `tools/release.py` (or the reusable
+  `vst-release.yml` workflow), then open a PR adding one small file, `catalog/plugins/<id>.json`. After that new
+  releases appear on their own: the catalog reads your releases every night and checks each zip. Open-source licenses,
+  or public source with a limited-use license (shown with a "Restricted use" badge).
+- **Plugins built from your own firmware** (so a built zip can never be shared) are listed as **Build it yourself**:
+  no download, just what you need, the exact build command and a warning.
+- Details: [docs/CATALOG.md](docs/CATALOG.md) (design and roadmap), [docs/CATALOG_SPEC.md](docs/CATALOG_SPEC.md) (formats),
+  [catalog/README.md](catalog/README.md) (how to contribute).
+
 MPC OS has a plugin host built in: a copy of the JUCE framework that can load Linux VST2 plugins. This repo builds
 plugins for it. They behave like MPC's own instruments and effects: you add them to a track, play them from pads,
 keys or the sequencer, turn them with Q-Links, and they're saved with the project. Each one gets its own **native
