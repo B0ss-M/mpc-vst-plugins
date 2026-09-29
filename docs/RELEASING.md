@@ -26,6 +26,8 @@ requirements, CPU result, checksums).
    `gh release create maze-voice-vst-v1.2.0 dist/Maze-Voice-1.2.0-mpc-armv7.zip --notes-file ...`
    Paste the zip's INSTALL.md "Requirements" and "Install" sections into the notes.
 
+**Catalog rule:** always pass `--repo` and `--license` (CI: `plugin_id`, `license`, `requires`) and run the `--catalog` check; see PORTING.md section 5.
+
 ## Releasing from CI
 `.github/workflows/vst-release.yml` is a reusable workflow that does steps 1, 2, 3 (as images) and 6 in GitHub Actions
 and attaches the zip to a **draft** release in the port's repo. Steps 4 and 5 stay on a device, and they are what
