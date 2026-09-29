@@ -403,7 +403,7 @@ class BuildYourselfTest(Base):
     def test_site_shows_build_instructions_not_downloads(self):
         html = catalog_site.render({"schema": 1, "generated": "x", "plugins": []})
         self.assertIn("The result contains firmware-derived data: build it yourself, install it on your own devices only, never share it.", html)
-        self.assertIn("Build instructions", html)
+        self.assertIn("How to build", html)
         cat = {"schema": 1, "generated": "x", "plugins": [{"id": "fw-synth", "name": "FW", "author": "A", "summary": "s", "versions": [
             {"version": "0.1.0", "tag": "v0.1.0", "date": "2026-09-29", "channel": "stable", "yanked": False, "source_url": "https://github.com/a/b/tree/v0.1.0"}]}]}
         self.assertIn("<link href=\"https://github.com/a/b/tree/v0.1.0\"/>", catalog_site.atom(cat))
