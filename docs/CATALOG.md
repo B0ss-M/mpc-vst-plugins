@@ -56,6 +56,23 @@ if the device has a usable `wget`/`curl` + TLS (**unverified: check on hardware 
 downloads and pushes over SSH, like Schwung's. Both must: verify sha256, show the source link, warn on a
 `param_compat` bump, and reuse the zip's own `install.sh` so there is one install path.
 
+## Prior art: Schwung (reviewed 2026-09-29, `charlesvestal/schwung`)
+- **Catalog** is one hand-edited `module-catalog.json` in the host repo (`catalog_version: 2`): a `host` block with
+  channels, a `taxonomy` (component types, subcategories, tags), and ~146 module entries with only `id`, `name`,
+  `description`, `author`, `component_type`, `subcategory`, `tags`, `github_repo`, `default_branch`, `asset_name`,
+  `min_host_version`, `requires`. **No versions or checksums in the catalog**: clients resolve the latest GitHub
+  release of `github_repo` and fetch `asset_name`. This confirms the "register once, discover versions" model.
+- **Site** (`schwung-catalog-site`, planned in `docs/plans/2026-03-28-catalog-site-design.md`): static GitHub
+  Pages, no framework; a daily + on-push Action fetches the catalog and GitHub download counts into `data/*.json`
+  and commits them. Sort by popular/newest/A-Z, category tabs, cards with audio previews.
+- **Installers:** a Tauri (Rust + web UI) desktop app that finds the device, sets up SSH, downloads the host
+  tarball and chosen modules and deploys with scp; plus an on-device Go web manager (`schwung-manager`) that
+  refreshes the catalog and updates modules. Not Electron, despite the chat.
+- **Take:** copy the taxonomy idea (kind, subcategory, tags), download counts, and `min_host_version` (ours: min
+  MPC OS version / MockbaMod). Where we go further: checksums and a validated manifest, because our installer runs
+  as root and edits `MPC.settings`. Our catalog is per-plugin files (PR-friendly, no merge conflicts) instead of
+  one big JSON.
+
 ## Roadmap
 Each phase is independently useful. Phases 0 to 3 are doable in this repo; the catalog can live under `catalog/`
 here first and move to its own repo (recommended, for community ownership) once the format settles.
@@ -67,6 +84,10 @@ here first and move to its own repo (recommended, for community ownership) once 
 - [ ] Ask early adopters which plugins exist today and which already publish GitHub releases.
 
 ### Phase 1: Make every release self-describing
+- [ ] Portable paths: `wrapper/plugin_dir.h` (`dladdr()` on the plugin's own symbol, `/proc/self/maps` fallback) so
+      engines locate presets/assets next to the `.so` wherever it was loaded from (`/sdcard`, `/media/*/Synths`, ...).
+      `install.sh`/`uninstall.sh`/`gen_vst.py` take the target dir from a variable or detect it. Reconcile with
+      Locrian's `plugin-meta` export (need to see the file).
 - [ ] Spec: `docs/CATALOG_SPEC.md` (registry entry, manifest, catalog.json, channels), schema 1, with JSON Schemas.
 - [ ] `tools/release.py` emits `mpc-plugin.json` into the zip; checksums include it. Byte-reproducible output.
 - [ ] `tools/catalog_check.py <zip>`: the validator above, runnable locally by authors before publishing.
