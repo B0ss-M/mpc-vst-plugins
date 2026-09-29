@@ -18,6 +18,7 @@ import json
 import os
 import re
 import sys
+import urllib.error
 import urllib.request
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -101,6 +102,18 @@ class GitHub:
                 return out
             page += 1
 
+    def tested(self, repo):
+        """Optional tested.json at the root of the repo's default branch: [{version, device, firmware, date}]."""
+        req = urllib.request.Request("https://raw.githubusercontent.com/%s/HEAD/tested.json" % repo,
+                                     headers={"User-Agent": "mpc-vst-catalog"})
+        try:
+            with urllib.request.urlopen(req, timeout=60) as r:
+                return json.load(r)
+        except urllib.error.HTTPError as ex:
+            if ex.code == 404:
+                return []
+            raise
+
     def download(self, asset, dest):
         req = urllib.request.Request(asset["browser_download_url"], headers={"User-Agent": "mpc-vst-catalog"})
         with urllib.request.urlopen(req, timeout=300) as r, open(dest + ".part", "wb") as f:
@@ -123,6 +136,12 @@ def build(entries, src, cache, yanked, keep=10, now=None):
         except Exception as ex:  # a repo we can't read: keep going, report it
             problems.append({"id": e["id"], "tag": None, "error": "cannot list releases: %s" % ex})
             releases = []
+        tested = []
+        if hasattr(src, "tested"):
+            try:
+                tested = [t for t in src.tested(e["repo"]) if isinstance(t, dict) and t.get("version") and t.get("device")]
+            except Exception as ex:  # optional file: a bad one only costs the badges
+                problems.append({"id": e["id"], "tag": None, "error": "tested.json ignored: %s" % ex})
         for rel in releases:
             if rel.get("draft"):
                 continue
@@ -155,7 +174,8 @@ def build(entries, src, cache, yanked, keep=10, now=None):
                 "warnings": warnings,
                 "downloads": asset.get("download_count", 0),
             })
-            rec["tested"] = []
+            rec["tested"] = [{k: t.get(k, "") for k in ("device", "firmware", "date")} for t in tested
+                             if str(t["version"]).lstrip("v") == rec["version"]]
             versions.append(rec)
         vkey = lambda v: tuple(int(x) for x in v["version"].split("."))
         versions.sort(key=vkey, reverse=True)

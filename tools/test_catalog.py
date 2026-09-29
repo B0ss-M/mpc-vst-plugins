@@ -146,6 +146,14 @@ class BuildTest(Base):
         self.assertEqual(p["downloads"], 6)
         self.assertEqual(sorted((x["tag"] for x in problems)), ["v1.2.0", "v1.3.0-b"])
 
+    def test_tested_json_attaches_to_matching_version(self):
+        gh = FakeGitHub({"acme/test-synth": [self.rel("v1.0.0", 1)]}, {1: self.build("1.0.0")})
+        gh.tested = lambda repo: [{"version": "v1.0.0", "device": "MPC Live II", "firmware": "3.6", "date": "2026-09-01"},
+                                  {"version": "9.9.9", "device": "Force"}]
+        cat, _ = catalog_build.build([self.ENTRY], gh, os.path.join(self.tmp, "c"), set())
+        self.assertEqual(cat["plugins"][0]["versions"][0]["tested"],
+                         [{"device": "MPC Live II", "firmware": "3.6", "date": "2026-09-01"}])
+
     def test_unreadable_repo_is_reported_not_fatal(self):
         cat, problems = catalog_build.build([self.ENTRY], FakeGitHub({}, {}), os.path.join(self.tmp, "c"), set())
         self.assertEqual(cat["plugins"][0]["versions"], [])
@@ -169,6 +177,15 @@ class SiteTest(unittest.TestCase):
         self.assertNotIn("/*CATALOG_JSON*/", html)
         data = html.split('<script id="data" type="application/json">')[1].split("</script>")[0]
         self.assertEqual(json.loads(data), cat)   # round-trips, and the embedded "</script>" can't end the block
+
+    def test_atom_feed_skips_yanked_and_escapes(self):
+        v = lambda ver, y: {"version": ver, "date": "2026-09-2%s" % ver[0], "url": "https://x/a?b=1&c=2", "yanked": y, "channel": "stable"}
+        cat = {"schema": 1, "generated": "g", "plugins": [{"id": "a", "name": "A <&>", "author": "Z", "summary": "s",
+                                                         "versions": [v("2.0", False), v("1.0", True)]}]}
+        import xml.dom.minidom
+        doc = xml.dom.minidom.parseString(catalog_site.atom(cat, "https://e.io/x/"))
+        self.assertEqual(len(doc.getElementsByTagName("entry")), 1)
+        self.assertIn("A <&>", doc.getElementsByTagName("title")[1].firstChild.data)
 
     def test_registry_style_and_source_available(self):
         e = dict(BuildTest.ENTRY, license="MAME license")
