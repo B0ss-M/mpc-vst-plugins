@@ -48,6 +48,7 @@
     <label>Style<select id="f-style"></select></label>
     <label>Developer<select id="f-dev"></select></label>
     <label>License<select id="f-lic"></select></label>
+    <label>Distribution<select id="f-dist"></select></label>
     <label>Sort by<select id="sort"></select></label>
   </div>
   <div class="status">
@@ -70,7 +71,10 @@
 <script>
 var CAT = JSON.parse(document.getElementById("data").textContent);
 var P = CAT.plugins;
-var state = { q: "", kind: "", style: "", dev: "", lic: "", sort: "updated", rev: false, beta: false };
+var state = { q: "", kind: "", style: "", dev: "", lic: "", dist: "", sort: "updated", rev: false, beta: false };
+var BY_WARNING = "The result contains firmware-derived data: build it yourself, install it on your own devices only, never share it.";
+function isBY(p) { return p.distribution === "build-yourself"; }
+function kindsOf(p) { var k = [p.kind]; (p.components || []).forEach(function (c) { if (k.indexOf(c.kind) < 0) k.push(c.kind); }); return k; }
 var SORTS = {
   name:      { label: "Name",              cmp: function (a, b) { return a.name.localeCompare(b.name); }, desc: false },
   updated:   { label: "Recently updated",  cmp: function (a, b) { return a.updated.localeCompare(b.updated); }, desc: true },
@@ -86,7 +90,9 @@ function fillSelect(id, all, values, label) {
 }
 var KINDS = { instrument: "Instruments", effect: "Effects" };
 var title = function (s) { return s.replace(/-/g, " ").replace(/^./, function (c) { return c.toUpperCase(); }); };
-fillSelect("f-kind", "All kinds", uniq(function (p) { return p.kind; }), function (v) { return KINDS[v] || v; });
+var allKinds = {}; P.forEach(function (p) { kindsOf(p).forEach(function (k) { allKinds[k] = 1; }); });
+fillSelect("f-kind", "All kinds", Object.keys(allKinds).sort(), function (v) { return KINDS[v] || v; });
+fillSelect("f-dist", "Any distribution", ["release", "build-yourself"], function (v) { return v === "release" ? "Download a release zip" : "Build it yourself"; });
 fillSelect("f-style", "All styles", uniq(function (p) { return p.style; }), title);
 fillSelect("f-dev", "All developers", uniq(function (p) { return p.author; }));
 fillSelect("f-lic", "Any license", ["open", "source-available"], function (v) { return v === "open" ? "Open source" : "Source-available (restricted use)"; });
@@ -103,7 +109,9 @@ function shown(p) {   /* the version to feature */
 function match(p) {
   var s = state, hay = [p.name, p.author, p.style || "", (p.tags || []).join(" "), p.summary].join(" ").toLowerCase();
   if (s.q && hay.indexOf(s.q.toLowerCase()) < 0) return false;
-  if (s.kind && p.kind !== s.kind) return false;
+  if (s.kind && kindsOf(p).indexOf(s.kind) < 0) return false;
+  if (s.dist === "build-yourself" && !isBY(p)) return false;
+  if (s.dist === "release" && isBY(p)) return false;
   if (s.style && p.style !== s.style) return false;
   if (s.dev && p.author !== s.dev) return false;
   if (s.lic === "open" && p.source_available) return false;
@@ -111,21 +119,41 @@ function match(p) {
   return true;
 }
 function size(n) { return n > 1e6 ? (n / 1e6).toFixed(1) + " MB" : Math.round(n / 1e3) + " KB"; }
+function testedRow(v) {
+  if (!v) return "";
+  return '<dt>Tested on</dt><dd>' + (v.tested && v.tested.length ? v.tested.map(function (t) { return esc(t.device + (t.firmware ? " " + t.firmware : "") + (t.date ? " (" + t.date + ")" : "")); }).join(", ") : "Not reported") + '</dd>';
+}
+function safeUrl(u) { return /^https:\/\//.test(u) ? u : "#"; }
 function card(p) {
-  var v = shown(p), tags = ['<span class="tag">' + esc(KINDS[p.kind] ? p.kind : p.kind) + '</span>'];
+  var by = isBY(p), v = shown(p), tags = [];
+  if (by) tags.push('<span class="tag build" title="No download: you build it from your own files">Build it yourself</span>');
+  tags.push('<span class="tag">' + esc(p.kind) + '</span>');
   if (p.style) tags.push('<span class="tag">' + esc(title(p.style)) + '</span>');
   tags.push('<span class="tag">' + esc(p.license) + '</span>');
   if (p.source_available) tags.push('<span class="tag warn" title="Source is public but the license limits how it may be used">Restricted use</span>');
   (p.tags || []).forEach(function (t) { tags.push('<span class="tag">' + esc(t) + '</span>'); });
   var hist = p.versions.length ? '<details class="vers"><summary>Versions (' + p.versions.length + ')</summary><table>' + p.versions.map(function (x) {
-    return '<tr class="' + (x.yanked ? "y" : "") + '"><td>v' + esc(x.version) + '</td><td>' + esc(x.date) + '</td><td>' + esc(x.channel) + (x.yanked ? ", yanked" : "") +
-      '</td><td>' + size(x.size) + '</td><td title="sha256 ' + esc(x.sha256) + '">' + esc(x.sha256.slice(0, 10)) + '</td></tr>';
+    var cols = by ? '<td><a href="' + esc(safeUrl(x.source_url)) + '">tag ' + esc(x.tag) + '</a></td>' : '<td>' + size(x.size) + '</td><td title="sha256 ' + esc(x.sha256) + '">' + esc(x.sha256.slice(0, 10)) + '</td>';
+    return '<tr class="' + (x.yanked ? "y" : "") + '"><td>v' + esc(x.version) + '</td><td>' + esc(x.date) + '</td><td>' + esc(x.channel) + (x.yanked ? ", yanked" : "") + '</td>' + cols + '</tr>';
   }).join("") + '</table></details>' : "";
-  return '<article class="card"><header><div><h2>' + esc(p.name) + '</h2><div class="by">by ' + esc(p.author) + '</div></div>' +
-    (v ? '<span class="ver" title="Latest ' + esc(v.channel) + ' release">v' + esc(v.version) + (v.channel === "beta" ? " beta" : "") + '</span>' : '<span class="ver">no release</span>') + '</header>' +
-    '<div class="tags">' + tags.join("") + '</div><p>' + esc(p.summary) + '</p>' +
-    '<dl class="meta"><dt>Updated</dt><dd>' + esc(p.updated || "n/a") + '</dd><dt>Downloads</dt><dd>' + p.downloads.toLocaleString() + '</dd>' +
-    (v && v.tested && v.tested.length ? '<dt>Tested on</dt><dd>' + v.tested.map(function (t) { return esc(t.device + (t.firmware ? " " + t.firmware : "") + (t.date ? " (" + t.date + ")" : "")); }).join(", ") + '</dd>' : (v ? '<dt>Tested on</dt><dd>Not reported</dd>' : '')) +
+  var head = '<article class="card' + (by ? " by" : "") + '"><header><div><h2>' + esc(p.name) + '</h2><div class="by">by ' + esc(p.author) + '</div></div>' +
+    (v ? '<span class="ver" title="Latest ' + (by ? "tag" : esc(v.channel) + " release") + '">v' + esc(v.version) + (v.channel === "beta" ? " beta" : "") + '</span>' : '<span class="ver">' + (by ? "no tag" : "no release") + '</span>') + '</header>' +
+    '<div class="tags">' + tags.join("") + '</div><p>' + esc(p.summary) + '</p>';
+  if (by) {
+    var b = p.build, docs = safeUrl(b.docs_url.replace("{tag}", v ? v.tag : "HEAD"));
+    return head +
+      '<div class="need"><h3>You need</h3><ul>' + p.requires_user_files.map(function (f) { return '<li><strong>' + esc(f.name) + '</strong>: ' + esc(f.description) + '</li>'; }).join("") + '</ul>' +
+      ((b.needs || []).length ? '<p class="also">Also needs: ' + b.needs.map(esc).join(", ") + '.</p>' : '') +
+      '<h3>Build with</h3><pre class="cmd"><code>' + esc(b.command) + '</code></pre></div>' +
+      '<p class="fw" role="note">' + esc(BY_WARNING) + '</p>' +
+      '<dl class="meta"><dt>Updated</dt><dd>' + esc(p.updated || "n/a") + '</dd>' +
+      ((p.components || []).length ? '<dt>Installs</dt><dd>' + p.components.map(function (c) { return esc(c.name + " (" + c.kind + ")"); }).join(", ") + '</dd>' : '') +
+      testedRow(v) + '<dt>Source</dt><dd>' + esc(p.repo) + '</dd></dl>' +
+      '<div class="actions"><a class="btn-l primary" href="' + esc(docs) + '">Build instructions</a>' +
+      '<a class="btn-l" href="https://github.com/' + esc(p.repo) + '">Source</a></div>' + hist + '</article>';
+  }
+  return head +
+    '<dl class="meta"><dt>Updated</dt><dd>' + esc(p.updated || "n/a") + '</dd><dt>Downloads</dt><dd>' + p.downloads.toLocaleString() + '</dd>' + testedRow(v) +
     (v ? '<dt>Projects</dt><dd>Compat ' + v.param_compat + ' (saved projects break only when this changes)</dd>' : '') + '<dt>Source</dt><dd>' + esc(p.repo) + '</dd></dl>' +
     '<div class="actions">' + (v ? '<a class="btn-l primary" href="' + esc(v.url) + '">Download</a>' : '') +
     '<a class="btn-l" href="https://github.com/' + esc(p.repo) + '">Source</a></div>' + hist + '</article>';
@@ -142,7 +170,7 @@ function render() {
   save();
 }
 function save() {
-  var d = { q: state.q, kind: state.kind, style: state.style, dev: state.dev, lic: state.lic, sort: state.sort === "updated" ? "" : state.sort, rev: state.rev ? "1" : "", beta: state.beta ? "1" : "" }, q = [];
+  var d = { q: state.q, kind: state.kind, style: state.style, dev: state.dev, lic: state.lic, dist: state.dist, sort: state.sort === "updated" ? "" : state.sort, rev: state.rev ? "1" : "", beta: state.beta ? "1" : "" }, q = [];
   Object.keys(d).forEach(function (k) { if (d[k]) q.push(k + "=" + encodeURIComponent(d[k])); });
   try { history.replaceState(null, "", q.length ? "#" + q.join("&") : location.pathname + location.search); } catch (e) {}
 }
@@ -154,11 +182,11 @@ function load() {
   });
   if (!SORTS[state.sort]) state.sort = "updated";
 }
-var map = { "q": "q", "f-kind": "kind", "f-style": "style", "f-dev": "dev", "f-lic": "lic", "sort": "sort" };
+var map = { "q": "q", "f-kind": "kind", "f-style": "style", "f-dev": "dev", "f-lic": "lic", "f-dist": "dist", "sort": "sort" };
 Object.keys(map).forEach(function (id) { $(id).addEventListener(id === "q" ? "input" : "change", function () { state[map[id]] = $(id).value; if (id === "sort") state.rev = false; render(); }); });
 $("beta").addEventListener("change", function () { state.beta = $("beta").checked; render(); });
 $("dir").addEventListener("click", function () { state.rev = !state.rev; render(); });
-$("clear").addEventListener("click", function () { state = { q: "", kind: "", style: "", dev: "", lic: "", sort: "updated", rev: false, beta: false }; sync(); render(); });
+$("clear").addEventListener("click", function () { state = { q: "", kind: "", style: "", dev: "", lic: "", dist: "", sort: "updated", rev: false, beta: false }; sync(); render(); });
 function sync() { Object.keys(map).forEach(function (id) { $(id).value = state[map[id]]; }); $("beta").checked = state.beta; }
 load(); sync(); render();
 

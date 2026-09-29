@@ -81,7 +81,7 @@ def atom(catalog, base=""):
         out.append("<entry><title>%s %s%s</title><id>tag:mpc-vst-catalog,2026:%s@%s</id><updated>%sT00:00:00Z</updated>"
                    '<link href="%s"/><author><name>%s</name></author><summary>%s</summary></entry>' % (
                        escape(p["name"]), escape(v["version"]), beta, escape(p["id"]), escape(v["version"]), date,
-                       escape(v["url"], {'"': "&quot;"}), escape(p["author"]), escape(p["summary"])))
+                       escape(v.get("url") or v.get("source_url", ""), {'"': "&quot;"}), escape(p["author"]), escape(p["summary"])))
     out.append("</feed>")
     return "\n".join(out) + "\n"
 

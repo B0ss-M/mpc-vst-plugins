@@ -123,3 +123,16 @@ footer { margin-top: 36px; color: var(--muted); font-size: 12px; border-top: 1px
 .pagelist a { display: flex; flex-direction: column; gap: 4px; text-decoration: none; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; }
 .pagelist b { font: 700 18px/1.1 var(--display); text-transform: uppercase; letter-spacing: .04em; }
 .pagelist span { color: var(--muted); font-size: 13px; }
+
+.tag.build { color: var(--accent); border-color: var(--accent); }
+.card.by { border-color: color-mix(in srgb, var(--accent) 35%, var(--line)); }
+.need { background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 14px; }
+.need h3 { font: 700 13px/1.2 var(--display); text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin: 8px 0 4px; }
+.need ul { margin: 0; padding-left: 18px; font-size: 14px; }
+.need li { margin: 3px 0; }
+.card .need .also { margin: 6px 0 0; font-size: 13px; color: var(--muted); flex: none; }
+.cmd { margin: 0 0 4px; background: var(--lcd-bg); color: var(--lcd-fg); border-radius: 4px; padding: 10px 12px; }
+.cmd code { font: 500 12px/1.5 ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
+.card .fw { margin: 0; flex: none; font-size: 13px; padding: 8px 12px; border-left: 3px solid var(--amber); background: color-mix(in srgb, var(--amber) 14%, var(--panel)); border-radius: 0 var(--radius) var(--radius) 0; }
+.actions { flex-wrap: wrap; }
+.actions .btn-l { white-space: nowrap; }
