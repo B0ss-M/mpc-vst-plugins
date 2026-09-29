@@ -94,7 +94,7 @@ here first and move to its own repo (recommended, for community ownership) once 
 - [x] `vst-release.yml` runs the validator; new inputs `plugin_id`, `license`, `requires` (2026-09-29, workflow not yet run in CI).
 - [ ] Port template repo (`vst.json`, `build.sh`, release workflow, `tested.json` stub, README) so a new plugin is
       catalog-ready from its first commit. Document in `PORTING.md`.
-- [ ] Back-fill: publish catalog-conformant releases for the existing ports (Maze, JV-880, Acid, Euclidier, ...).
+- [ ] Back-fill: publish catalog-conformant releases for the existing ports (Maze, JV-880, Acid, Euclidier, ...). 2026-09-29: Crate Digger 1.1.1 and JV-880 1.0.1 built and validated as **drafts** (pass `catalog_check --catalog`); publish after a device smoke test. The rest are still to do.
 
 ### Phase 2: The catalog builder
 - [x] (2026-09-29, tested with a fake GitHub source; not yet run against real releases) `tools/catalog_build.py`: read `plugins/*.json`, list GitHub releases (API, token via Actions), download
