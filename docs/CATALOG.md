@@ -80,7 +80,7 @@ here first and move to its own repo (recommended, for community ownership) once 
 ### Phase 0: Decide (needs the user)
 - [x] Catalog home: `catalog/` in this repo (decided 2026-09-29; can be split out later). Hosting: GitHub Pages.
 - [ ] Naming and domain (a `github.io` URL is fine to start).
-- [x] Inclusion policy: open-source licence required (SPDX list in `tools/catalog_build.py`), armv7 zip, no closed binaries (decided 2026-09-29).
+- [x] Inclusion policy: open-source licence, or public source flagged `source_available` and shown with a Restricted use badge (JV-880's MAME licence; decided 2026-09-29) (SPDX list in `tools/catalog_build.py`), armv7 zip, no closed binaries (decided 2026-09-29).
 - [ ] Ask early adopters which plugins exist today and which already publish GitHub releases.
 
 ### Phase 1: Make every release self-describing
@@ -107,8 +107,8 @@ here first and move to its own repo (recommended, for community ownership) once 
 - [x] `catalog/yanked.json` mechanism for pulling a bad release without touching the author's repo.
 
 ### Phase 3: The website
-- [ ] `tools/catalog_site.py` generates the site from `catalog.json`; deploy with Pages from the same workflow.
-- [ ] List with search, kind and device filters; plugin page with history, install steps, checksum, source link.
+- [x] `tools/catalog_site.py` generates the site from `catalog.json`; `catalog.yml` deploys with Pages on main (2026-09-29; checked in headless Chromium with sample data, the Pages deploy has not run: needs Settings > Pages > Source: GitHub Actions).
+- [x] List with search, filters (kind, style, developer, license, beta) and sorting (updated, downloads, name, developer, kind), state kept in the URL hash; plugin page with history, install steps, checksum, source link.
 - [ ] Atom feed of new releases; "tested on" badges; contributor docs ("Add your plugin in 5 minutes").
 - [ ] Announce to the community; collect what people actually ask for before building Phase 4.
 

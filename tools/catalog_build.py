@@ -48,8 +48,15 @@ def check_entry(e, fname=None):
         p.append("repo must be owner/name")
     if e["kind"] not in KINDS:
         p.append("kind must be one of %s" % ", ".join(KINDS))
-    if e["license"] not in OPEN_LICENSES:
-        p.append("license %r is not on the open-source list (docs/CATALOG.md inclusion policy)" % e["license"])
+    if e["license"] not in OPEN_LICENSES and e.get("source_available") is not True:
+        p.append("license %r is not on the open-source list: set \"source_available\": true if the source is public "
+                 "but the license limits use (shown as a badge), see docs/CATALOG.md" % e["license"])
+    if "source_available" in e and not isinstance(e["source_available"], bool):
+        p.append("source_available must be true or false")
+    if "style" in e and not (isinstance(e["style"], str) and ID.fullmatch(e["style"])):
+        p.append("style must be a lowercase slug, e.g. sampler, synth, reverb")
+    if "tags" in e and not (isinstance(e["tags"], list) and all(isinstance(t, str) and ID.fullmatch(t) for t in e["tags"])):
+        p.append("tags must be a list of lowercase slugs")
     return p
 
 
@@ -154,13 +161,16 @@ def build(entries, src, cache, yanked, keep=10, now=None):
         versions.sort(key=vkey, reverse=True)
         versions = versions[:keep]
         item = {k: e[k] for k in ("id", "name", "author", "repo", "kind", "license", "summary") }
-        for k in ("screenshot", "homepage"):
+        for k in ("screenshot", "homepage", "style"):
             if e.get(k):
                 item[k] = e[k]
+        item["tags"] = e.get("tags", [])
+        item["source_available"] = bool(e.get("source_available"))
         item["versions"] = versions
         item["latest"] = next((v["version"] for v in versions if v["channel"] == "stable" and not v["yanked"]), None)
         item["latest_beta"] = next((v["version"] for v in versions if v["channel"] == "beta" and not v["yanked"]), None)
         item["downloads"] = sum(v["downloads"] for v in versions)
+        item["updated"] = max((v["date"] for v in versions if not v["yanked"]), default="")
         plugins.append(item)
     plugins.sort(key=lambda p: p["name"].lower())
     catalog = {"schema": 1, "generated": (now or datetime.datetime.now(datetime.timezone.utc)).strftime("%Y-%m-%dT%H:%M:%SZ"),

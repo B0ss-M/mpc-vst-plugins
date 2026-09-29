@@ -39,13 +39,17 @@ Warnings (need a human look): `install.sh`/`uninstall.sh`/`plugin_list.awk` diff
 ```json
 { "id": "my-synth", "name": "My Synth", "author": "Someone", "repo": "someone/my-synth-vst",
   "kind": "instrument", "license": "MIT", "summary": "One line.",
+  "style": "synth", "tags": ["poly"], "source_available": false,
   "screenshot": "optional URL or path", "asset_pattern": "*-mpc-armv7.zip" }
 ```
+`style` (one slug) and `tags` (slugs) are optional and drive the site filters. `source_available: true` is required
+when `license` is not on the open-source list; the site shows a "Restricted use" badge.
 No version fields: they are read from the releases. `id` must equal the manifest `id`, `repo` the manifest
 `source_repo`. Stable releases are GitHub releases that are not prereleases; prereleases form the beta channel.
 
 ## `catalog.json` (generated)
-`{"schema": 1, "generated": <ISO time>, "plugins": [ <registry fields> + "versions": [ <record>, ... ] ]}`, versions
+`{"schema": 1, "generated": <ISO time>, "plugins": [ <registry fields> + "versions": [ <record>, ... ], "latest",
+"latest_beta", "downloads", "updated" ]}`, versions
 newest first. A record is what `catalog_check.py --json` prints (`version`, `size`, `sha256` of the zip,
 `param_compat`, `max_glibc`, `cpu`, `manifest`) plus `url`, `date`, `channel` (`stable`|`beta`), `notes`, `yanked`
 and `tested` (`[{device, firmware, date}]`), added by the builder.

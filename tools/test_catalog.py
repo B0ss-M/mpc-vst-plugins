@@ -159,5 +159,23 @@ class BuildTest(Base):
         self.assertTrue(catalog_build.check_entry({**self.ENTRY, "repo": "nope"}))
 
 
+import catalog_site  # noqa: E402
+
+
+class SiteTest(unittest.TestCase):
+    def test_render_embeds_catalog_safely(self):
+        cat = {"schema": 1, "generated": "x", "plugins": [{"id": "a", "name": "A </script><b>", "versions": []}]}
+        html = catalog_site.render(cat)
+        self.assertNotIn("/*CATALOG_JSON*/", html)
+        data = html.split('<script id="data" type="application/json">')[1].split("</script>")[0]
+        self.assertEqual(json.loads(data), cat)   # round-trips, and the embedded "</script>" can't end the block
+
+    def test_registry_style_and_source_available(self):
+        e = dict(BuildTest.ENTRY, license="MAME license")
+        self.assertTrue(catalog_build.check_entry(e))
+        self.assertEqual(catalog_build.check_entry(dict(e, source_available=True, style="rompler", tags=["jv-880"])), [])
+        self.assertTrue(catalog_build.check_entry(dict(BuildTest.ENTRY, style="Bad Style")))
+
+
 if __name__ == "__main__":
     unittest.main()

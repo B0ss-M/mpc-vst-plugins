@@ -1,0 +1,3 @@
+{ "id": "jv-880", "name": "JV-880", "author": "sd88me", "repo": "sd88me/mpc-vst-jv880",
+  "kind": "instrument", "style": "rompler", "tags": ["roland", "emulation"], "license": "MAME license", "source_available": true,
+  "summary": "Roland JV-880 sample-based sound engine as a native instrument, with the original reverb and chorus, a Play page with eight macros and a touchscreen skin." }
