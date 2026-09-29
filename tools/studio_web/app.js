@@ -55,7 +55,7 @@ const TEXT = {
   list: [["key", "row parameters (<key>_1 … <key>_N)", "s"]],
   text: [["label", "text", "s"], ["size", "size (1.5 = default)", "s"], ["color", "colour", "color"],
          ["font", "font family (only if the renderer has it; else use a font file)", "s"],
-         ["fontfile", "font file (.ttf/.otf beside the layout)", "s"],
+         ["fontfile", "font file", "font"],
          ["weight", "weight", "sel:,400,600,700"], ["align", "align about the centre x", "sel:,left,center,right"],
          ["spacing", "letter spacing (px)", "s"], ["case", "case", "sel:,upper,none"],
          ["opacity", "opacity (0-1)", "s"], ["italic", "italic", "sel:,1"]],
@@ -717,6 +717,9 @@ function renderInspect() {
       wrap.append(c, clear);
       p.append(field(label, wrap));
       continue;
+    } else if (type === "font") {
+      p.append(field(label, fontPicker(w.fontfile, v => edit(() => { const ww = W(S.sel[0]); if (v) ww.fontfile = v; else delete ww.fontfile; }))));
+      continue;
     } else if (type === "file") {
       p.append(field(label, imagePicker(w.file, v => v && edit(() => (W(S.sel[0]).file = v)), { none: null })));
       continue;
@@ -1242,6 +1245,39 @@ function imagePicker(value, onpick, opts = {}) {
     if (n) onpick(n);
   } });
   return el("div", { className: "ui-pick" }, value && imageInfo(value) ? el("img", { className: "ui-thumb", src: imgURL(value), alt: "" }) : null, sel, up);
+}
+
+// fonts go into fonts/ next to the layout (an embedded font, so any typeface works in the browser renderer)
+async function uploadFonts(files) {
+  const out = [];
+  for (const f of files) {
+    const name = "fonts/" + f.name.replace(/[\\/]/g, "_");
+    if (!replaceOk(name, S.doc.fonts.map(x => x.replace(/\\/g, "/")))) continue;
+    try {
+      await api("/api/upload?name=" + encodeURIComponent(name), await f.arrayBuffer(), true);
+      S.doc.fonts = S.doc.fonts.filter(x => x.replace(/\\/g, "/") !== name).concat([name]);
+      out.push(name);
+    } catch (e) { toast(e.message, true); }
+  }
+  if (out.length) S.cache.clear();
+  return out;
+}
+
+function fontPicker(value, onpick) {
+  const sel = el("select", {});
+  sel.append(el("option", { value: "", textContent: "(none: use the font family)" }));
+  for (const f of S.doc.fonts) {
+    const n = f.replace(/\\/g, "/");
+    if (!n.startsWith("html_art/")) sel.append(el("option", { value: n, textContent: n }));
+  }
+  if (value && ![...sel.options].some(o => o.value === value)) sel.append(el("option", { value, textContent: value + " (missing)" }));
+  sel.value = value || "";
+  sel.onchange = () => onpick(sel.value);
+  const up = el("button", { textContent: "Upload…", onclick: async () => {
+    const [n] = await uploadFonts(await pickFiles(".ttf,.otf,.woff,.woff2", false));
+    if (n) onpick(n);
+  } });
+  return el("div", { className: "ui-pick" }, sel, up);
 }
 
 async function backgroundImage() {

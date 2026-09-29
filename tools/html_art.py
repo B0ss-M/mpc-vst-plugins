@@ -399,7 +399,7 @@ class Art:
                 import base64, hashlib
                 path = a[11][1:]
                 fam = "ft" + hashlib.md5(path.encode()).hexdigest()[:8]
-                mime = "font/otf" if path.lower().endswith(".otf") else "font/ttf"
+                mime = {".otf": "font/otf", ".woff": "font/woff", ".woff2": "font/woff2"}.get(os.path.splitext(path)[1].lower(), "font/ttf")
                 b64 = base64.b64encode(open(path, "rb").read()).decode()
                 self.ops.append('<defs><style>@font-face{font-family:"%s";src:url(data:%s;base64,%s)}</style></defs>' % (fam, mime, b64))
                 st += ";font-family:'%s',var(--font)" % fam

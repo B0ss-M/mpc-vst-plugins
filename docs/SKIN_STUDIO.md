@@ -41,7 +41,7 @@ The tools need Python 3; the skin build and preview also need Pillow (the ports 
 `size=` (scale, 1.5 = the label size, about 10 px per 1.0), `color=`, and, with the browser renderer (`"art": "html"`):
 `align=left|center|right` (about `cx`), `weight=400|600|700`, `spacing=<px>` (letter spacing), `case=upper|none`,
 `opacity=0..1`, `italic=1`, `font=<family>` (only families the renderer's image has; Titillium Web is bundled) and
-`fontfile=<file.ttf|otf>` (beside the layout; embedded, so any typeface works and it wins over `font=`). Use a font
+`fontfile=<file.ttf|otf|woff|woff2>` (beside the layout; embedded, so any typeface works and it wins over `font=`; in the editor pick one from the list or **Upload…** to put it in `fonts/`). A font uploaded in the Style panel is also usable by family name in `font=`. Use a font
 whose licence lets you ship it. All of these are in the inspector when a text widget is selected. Baked text only:
 MPC's live names and values stay in Titillium Web.
 
