@@ -1,0 +1,38 @@
+{
+  "params": [
+    { "key": "glide", "name": "Glide", "min": 0, "max": 127, "default": 0, "display": "int" },
+    { "key": "lfo_freq", "name": "LFO Frequency", "min": 0, "max": 127, "default": 64, "display": "int" },
+    { "key": "wmod_src_mix", "name": "Wheel Mod Mix", "min": 0, "max": 127, "default": 0, "display": "int" },
+    { "key": "pmod_osc_b", "name": "Poly Mod Osc B", "min": 0, "max": 127, "default": 0, "display": "int" },
+    { "key": "pmod_filt_env", "name": "Poly Mod Filter Env", "min": 0, "max": 127, "default": 0, "display": "int" },
+    { "key": "osc_a_freq", "name": "Osc A Frequency", "min": 0, "max": 127, "default": 64, "display": "int" },
+    { "key": "osc_b_freq", "name": "Osc B Frequency", "min": 0, "max": 127, "default": 64, "display": "int" },
+    { "key": "osc_b_fine", "name": "Osc B Fine", "min": 0, "max": 127, "default": 0, "display": "int" },
+
+    { "key": "filt_cutoff", "name": "Filter Cutoff", "min": 0, "max": 127, "default": 127, "display": "int" },
+    { "key": "filt_env_amt", "name": "Filter Env Amount", "min": 0, "max": 127, "default": 0, "display": "int" },
+    { "key": "mix_osc_b", "name": "Mixer Osc B", "min": 0, "max": 127, "default": 127, "display": "int" },
+    { "key": "osc_b_pw", "name": "Osc B Pulse Width", "min": 0, "max": 127, "default": 64, "display": "int" },
+    { "key": "mix_osc_a", "name": "Mixer Osc A", "min": 0, "max": 127, "default": 127, "display": "int" },
+    { "key": "osc_a_pw", "name": "Osc A Pulse Width", "min": 0, "max": 127, "default": 64, "display": "int" },
+    { "key": "mix_noise", "name": "Mixer Noise", "min": 0, "max": 127, "default": 0, "display": "int" },
+    { "key": "filt_resonance", "name": "Filter Resonance", "min": 0, "max": 127, "default": 0, "display": "int" },
+
+    { "key": "filt_attack", "name": "Filter Attack", "min": 0, "max": 127, "default": 5, "display": "int" },
+    { "key": "filt_decay", "name": "Filter Decay", "min": 0, "max": 127, "default": 5, "display": "int" },
+    { "key": "filt_sustain", "name": "Filter Sustain", "min": 0, "max": 127, "default": 127, "display": "int" },
+    { "key": "filt_release", "name": "Filter Release", "min": 0, "max": 127, "default": 11, "display": "int" },
+    { "key": "amp_attack", "name": "Amp Attack", "min": 0, "max": 127, "default": 5, "display": "int" },
+    { "key": "amp_decay", "name": "Amp Decay", "min": 0, "max": 127, "default": 5, "display": "int" },
+    { "key": "amp_sustain", "name": "Amp Sustain", "min": 0, "max": 127, "default": 127, "display": "int" },
+    { "key": "amp_release", "name": "Amp Release", "min": 0, "max": 127, "default": 11, "display": "int" },
+
+    { "key": "engine_status", "name": "Engine Status", "min": 0, "max": 2, "default": 0, "display": "int", "dynamic_display": true, "type": "readout" }
+  ],
+  "sections": [
+    { "label": "Performance", "keys": ["glide", "lfo_freq", "wmod_src_mix", "pmod_osc_b", "pmod_filt_env", "osc_a_freq", "osc_b_freq", "osc_b_fine"] },
+    { "label": "Oscillator & Mixer", "keys": ["filt_cutoff", "filt_env_amt", "mix_osc_b", "osc_b_pw", "mix_osc_a", "osc_a_pw", "mix_noise", "filt_resonance"] },
+    { "label": "Envelopes", "keys": ["filt_attack", "filt_decay", "filt_sustain", "filt_release", "amp_attack", "amp_decay", "amp_sustain", "amp_release"] },
+    { "label": "Status", "keys": ["engine_status"] }
+  ]
+}

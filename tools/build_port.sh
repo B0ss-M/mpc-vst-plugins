@@ -5,6 +5,7 @@
 # Needs Docker (with QEMU for arm32v7). The skin artwork renderer is vendored in tools/vendor/force-shadow/.
 set -euo pipefail
 MV="$(cd "$(dirname "$0")/.." && pwd)"
+ARM_IMAGE="${MPC_ARM_IMAGE:-arm32v7/gcc:12}"
 CFG="$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"
 eval "$(python3 "$MV/tools/gen_vst.py" "$CFG" --shell)"
 # an engine from another ecosystem: its adapter (adapters/<name>/) provides mpc_engine()
@@ -51,7 +52,7 @@ case "$SOURCES" in
   *) CXXPORT=0 ;;
 esac
 if [ "$CXXPORT" = 0 ]; then
-  docker run --rm --platform linux/arm/v7 -u "$U" -v "$ROOT":/b -v "$MV":/mv:ro -w /b arm32v7/gcc:12 bash -euc "
+  docker run --rm --platform linux/arm/v7 -u "$U" -v "$ROOT":/b -v "$MV":/mv:ro -w /b "$ARM_IMAGE" bash -euc "
     gcc -O2 -Wall -Wextra -Wno-unused-parameter -fPIC -shared -fvisibility=hidden -std=gnu11 $CFLAGS -I'$PORT/build' \
         $SOURCES $ADAPTER_SRC /mv/wrapper/vst2_wrap.c $LIBS -Wl,--no-undefined -o '$PORT/build/$SO'
     strip '$PORT/build/$SO'
@@ -59,7 +60,7 @@ if [ "$CXXPORT" = 0 ]; then
     echo \"highest glibc: \$(readelf -V '$PORT/build/$SO' | grep -o 'GLIBC_[0-9.]*' | sort -uV | tail -1) (device has 2.39)\"
   "
 else
-  docker run --rm --platform linux/arm/v7 -u "$U" -v "$ROOT":/b -v "$MV":/mv:ro -w /b arm32v7/gcc:12 bash -euc "
+  docker run --rm --platform linux/arm/v7 -u "$U" -v "$ROOT":/b -v "$MV":/mv:ro -w /b "$ARM_IMAGE" bash -euc "
     OBJS=''
     for f in $SOURCES; do
       o=\"$PORT/build/\${f//\//_}.o\"
