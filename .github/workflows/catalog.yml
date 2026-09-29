@@ -12,6 +12,7 @@ on:
     paths: ['catalog/**', 'tools/catalog_*.py']
 permissions:
   contents: read
+  issues: write
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -26,6 +27,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python3 tools/catalog_build.py
+      - name: Open issues for failing releases
+        if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 tools/catalog_issues.py
       - name: Generate the site
         if: ${{ github.event_name != 'pull_request' }}
         run: python3 tools/catalog_site.py

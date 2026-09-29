@@ -167,6 +167,18 @@ class BuildTest(Base):
         self.assertTrue(catalog_build.check_entry({**self.ENTRY, "repo": "nope"}))
 
 
+import catalog_issues  # noqa: E402
+
+
+class IssuesTest(unittest.TestCase):
+    def test_plan_dedupes_and_skips_open(self):
+        pr = [{"id": "a", "tag": "v1", "error": "x"}, {"id": "a", "tag": "v1", "error": "y"},
+              {"id": "a", "tag": "v2", "error": "z"}, {"id": "b", "tag": None, "error": "404"}]
+        got = catalog_issues.plan(pr, {"Catalog: a v2 failed validation"})
+        self.assertEqual([t for t, _ in got], ["Catalog: a v1 failed validation", "Catalog: b cannot be read"])
+        self.assertIn("- x", got[0][1]); self.assertIn("- y", got[0][1])
+
+
 import catalog_site  # noqa: E402
 
 
