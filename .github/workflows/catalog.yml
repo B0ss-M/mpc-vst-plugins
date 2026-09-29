@@ -7,9 +7,9 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ['catalog/**', 'tools/catalog_*.py']
+    paths: ['catalog/**', 'tools/catalog_*.py', 'tools/catalog_site/**']
   pull_request:
-    paths: ['catalog/**', 'tools/catalog_*.py']
+    paths: ['catalog/**', 'tools/catalog_*.py', 'tools/catalog_site/**']
 permissions:
   contents: read
   issues: write

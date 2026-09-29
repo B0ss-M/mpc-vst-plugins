@@ -40,3 +40,8 @@ never offered as the latest.
 `python3 tools/catalog_build.py --check-registry` validates entries; without the flag it fetches releases (set
 `GITHUB_TOKEN` to avoid API limits) and writes `catalog/dist/catalog.json` and `problems.json`.
 `python3 tools/catalog_site.py` then writes the site to `catalog/dist/site/` (open `index.html`).
+
+## Guide pages
+The site's Install, Build, Workflow and Add yours pages are the Markdown files in `catalog/pages/`. Edit one and
+the next site build publishes it. A page starts with front matter (`title`, `nav` for the menu label, `order`,
+`summary`); a new file is added to the menu automatically. The Markdown subset is described in `tools/catalog_md.py`.
