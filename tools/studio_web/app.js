@@ -53,7 +53,12 @@ const TEXT = {
             ["prev", "prev parameter (default <key>_prev)", "key"], ["next", "next parameter (default <key>_next)", "key"],
             ["get", "text from parameter (optional)", "key"]],
   list: [["key", "row parameters (<key>_1 … <key>_N)", "s"]],
-  text: [["label", "text", "s"], ["size", "size (1.5 = default)", "s"], ["color", "colour", "color"]],
+  text: [["label", "text", "s"], ["size", "size (1.5 = default)", "s"], ["color", "colour", "color"],
+         ["font", "font family (only if the renderer has it; else use a font file)", "s"],
+         ["fontfile", "font file (.ttf/.otf beside the layout)", "s"],
+         ["weight", "weight", "sel:,400,600,700"], ["align", "align about the centre x", "sel:,left,center,right"],
+         ["spacing", "letter spacing (px)", "s"], ["case", "case", "sel:,upper,none"],
+         ["opacity", "opacity (0-1)", "s"], ["italic", "italic", "sel:,1"]],
 };
 for (const k of ["knob", "slider_v", "slider_h", "toggle", "menu", "meter"]) TEXT[k] = [["label", "label", "s"], ["key", "parameter", "key"]];
 const LOOK_ATTRS = ["look", "img", "img_on", "base", "strip", "frames", "peak", "rms"];

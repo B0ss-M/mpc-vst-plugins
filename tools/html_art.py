@@ -385,6 +385,28 @@ class Art:
         elif op == "text" and n == 6:
             sc = float(a[3])
             self.ops.append(self.text(I(1), I(2) + 4.5 * sc, a[5], "text", extra=' style="fill:%s"' % hexc(a[4])))
+        elif op == "htext" and n >= 13:
+            # htext|cx|cy|size|color|anchor|weight|spacing|case|opacity|italic|font|text
+            sc = float(a[3])
+            st = "fill:%s;font-size:%gpx" % (hexc(a[4]), sc * 10)
+            if a[6]: st += ";font-weight:%d" % int(float(a[6]))
+            if a[7]: st += ";letter-spacing:%gpx" % float(a[7])
+            if a[8] == "upper": st += ";text-transform:uppercase"
+            elif a[8] == "none": st += ";text-transform:none"
+            if a[9]: st += ";opacity:%g" % float(a[9])
+            if a[10] == "1": st += ";font-style:italic"
+            if a[11].startswith("@"):
+                import base64, hashlib
+                path = a[11][1:]
+                fam = "ft" + hashlib.md5(path.encode()).hexdigest()[:8]
+                mime = "font/otf" if path.lower().endswith(".otf") else "font/ttf"
+                b64 = base64.b64encode(open(path, "rb").read()).decode()
+                self.ops.append('<defs><style>@font-face{font-family:"%s";src:url(data:%s;base64,%s)}</style></defs>' % (fam, mime, b64))
+                st += ";font-family:'%s',var(--font)" % fam
+            elif a[11].strip():
+                fam = a[11].replace('"', "").replace("'", "").replace(";", "").replace("<", "").replace(">", "").strip()
+                st += ";font-family:'%s',var(--font)" % fam
+            self.ops.append(self.text(I(1), I(2), "|".join(a[12:]), "text", anchor=a[5], extra=' style="%s"' % st))
         elif op == "knob" and n == 5:
             self.ops.append(self.knob_svg(I(1), I(2), I(3), I(4)))
         elif op == "pill" and n == 4:
@@ -527,7 +549,8 @@ class Art:
                 pg.set_viewport_size({"width": w, "height": h})
                 pg.evaluate("([s, w, h]) => { const c = document.getElementById('c'); c.setAttribute('width', w);"
                             " c.setAttribute('height', h); document.getElementById('g').innerHTML = s; }", [svg, w, h])
-                pg.evaluate("document.fonts.ready")
+                # a layout pass first: a font (e.g. an embedded fontfile=) only starts loading once text uses it
+                pg.evaluate("async () => { void document.body.offsetHeight; await document.fonts.ready; }")
 
             for job in self.jobs:
                 if job[0] == "crop":

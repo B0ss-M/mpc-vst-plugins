@@ -35,6 +35,16 @@ The tools need Python 3; the skin build and preview also need Pillow (the ports 
   `popup cx= cy= w= h= key=<param>` by hand when an option list takes too much room.
 - Labels are shortened to fit (an `LFO1 > ` prefix is dropped, since the frame title already says it).
 
+### Text widget
+
+`text cx= cy= label="..."` draws free-standing static text (no parameter), baked into the page background. Options:
+`size=` (scale, 1.5 = the label size, about 10 px per 1.0), `color=`, and, with the browser renderer (`"art": "html"`):
+`align=left|center|right` (about `cx`), `weight=400|600|700`, `spacing=<px>` (letter spacing), `case=upper|none`,
+`opacity=0..1`, `italic=1`, `font=<family>` (only families the renderer's image has; Titillium Web is bundled) and
+`fontfile=<file.ttf|otf>` (beside the layout; embedded, so any typeface works and it wins over `font=`). Use a font
+whose licence lets you ship it. All of these are in the inspector when a text widget is selected. Baked text only:
+MPC's live names and values stay in Titillium Web.
+
 ## Browser editor
 Double-click the launcher at the repo root: `SkinStudio.command` on macOS, `SkinStudio.bat` on Windows, `SkinStudio.sh`
 on Linux (run it from the file manager, or `./SkinStudio.sh`). It opens the editor in your default browser; keep the

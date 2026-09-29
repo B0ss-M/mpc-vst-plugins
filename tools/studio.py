@@ -236,9 +236,8 @@ def shape_for(w, base_dir="."):
         x1, y1 = max(r[0] + r[2] for r in rs), max(r[1] + r[3] for r in rs)
         return "rect", dict(x=x0, y=y0 - Y_OFF, width=x1 - x0, height=y1 - y0)
     if k == "text":
-        lw = shadow_skin.text_width(w.get("label", ""), float(w.get("size", 1.5)))
-        th = int(16 * float(w.get("size", 1.5)))
-        return "rect", dict(x=w["cx"] - lw / 2, y=w["cy"] - th / 2 - Y_OFF, width=lw, height=th)
+        x, y, bw, bh = shadow_skin.text_box(w)
+        return "rect", dict(x=x + 4, y=y + 4 - Y_OFF, width=bw - 8, height=bh - 8)
     raise ValueError(k)
 
 

@@ -12,6 +12,9 @@ Layout file:
                                                         not bound to any parameter. size is a scale
                                                         multiplier (1.5 default, matches label text);
                                                         color defaults to theme_ink)
+            [font="Titillium Web"] [fontfile=fonts/My.ttf (beside the layout; overrides font=)] [weight=400|600|700] [align=left|center|right] [spacing=<px>]
+            [case=upper|none] [opacity=0..1] [italic=1]      (html art only; align is about cx: "left"
+                                                        starts at cx, "right" ends at cx)
     knob    cx= cy= r= label="..." key=<param>
     toggle  cx= cy= label="..." key=<param>
     button  cx= cy= label="..." key=<param>          (trigger)
@@ -371,8 +374,39 @@ def baked_cmds(w, title_font=None, base_dir="."):
     elif w["kind"] == "text":
         size = float(w.get("size", 1.5))
         color = w.get("color", INK)
-        cmds.append("text|%d|%d|%s|%s|%s" % (w["cx"], w["cy"], size, color, w.get("label", "")))
+        if any(k in w for k in TEXT_EXT):   # the browser renderer only; shadow_art's bitmap font has none of these
+            anchor = {"left": "start", "right": "end"}.get(w.get("align", "center"), "middle")
+            cmds.append("htext|%d|%d|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s" % (
+                w["cx"], w["cy"], size, color, anchor, w.get("weight", ""), w.get("spacing", ""),
+                w.get("case", ""), w.get("opacity", ""), 1 if w.get("italic") in ("1", 1, "yes", "true") else 0,
+                ("@" + os.path.abspath(os.path.join(base_dir, w["fontfile"])) if w.get("fontfile")
+                 else (w.get("font", "") or "")).replace("|", " "), w.get("label", "")))
+        else:
+            cmds.append("text|%d|%d|%s|%s|%s" % (w["cx"], w["cy"], size, color, w.get("label", "")))
     return cmds + label_cmds(w, title_font)
+
+
+TEXT_EXT = ("font", "fontfile", "weight", "align", "spacing", "case", "opacity", "italic")
+
+
+def text_box(w):
+    """(x, y, w, h) in shadow coords of a free-standing text widget, generously; estimates the
+    browser renderer's font (about 0.6 em per glyph plus letter spacing) when extended options are set."""
+    size = float(w.get("size", 1.5))
+    lab = w.get("label", "")
+    if not any(k in w for k in TEXT_EXT):
+        lw = text_width(lab, size)
+    else:
+        px = size * 10
+        try:
+            sp = float(w.get("spacing", 0.04 * px))
+        except ValueError:
+            sp = 0.0
+        lw = int(len(lab) * (px * 0.62 + sp)) + 2
+    th = int(16 * size)
+    align = w.get("align", "center")
+    x0 = w["cx"] if align == "left" else w["cx"] - lw if align == "right" else w["cx"] - lw // 2
+    return (x0 - 4, w["cy"] - th // 2 - 4, lw + 8, th + 8)
 
 
 def baked_rect(w):
@@ -394,9 +428,7 @@ def baked_rect(w):
         x0, x1 = min(x0, w["cx"] - lw // 2), max(x1, w["cx"] + lw // 2)
         return (x0 - 4, y0 - 48, x1 - x0 + 8, 48)
     if k == "text":
-        lw = text_width(w.get("label", ""), float(w.get("size", 1.5)))
-        th = int(16 * float(w.get("size", 1.5)))
-        return (w["cx"] - lw // 2 - 4, w["cy"] - th // 2 - 4, lw + 8, th + 8)
+        return text_box(w)
     return None
 
 
