@@ -13,6 +13,8 @@ The catalog is a list of plugins you point it at. It reads versions, links and c
 - **A release zip** built with this repo's `tools/release.py` (or its workflow) for 32-bit ARM MPC OS devices, with a version like `1.2.0`.
 - **No closed binaries**, and nothing that ships Akai's own skins or files. Do not include sound content you have no right to share.
 
+> Does your plugin need the user's own firmware to build, so that a built zip would contain someone else's code or ROMs? Then you can't publish a release. See [Plugins that can't ship a zip](#plugins-that-can-t-ship-a-zip) below.
+
 ## 1. Publish a release the catalog can read
 Build your zip with a repo, a license and, if you like, a catalog id, then check it locally:
 
@@ -50,6 +52,11 @@ Do not put versions or checksums in this file. The catalog reads them from your 
 - Every night, and whenever the catalog build is run, the catalog reads your releases, downloads each zip and checks it: file layout, checksums, ARM build, the highest glibc it needs, that the installer matches the standard one, and that the id, uid and repo agree with your entry.
 - A release that passes appears on the site with its date, size and checksum. GitHub prereleases show up as beta.
 - A release that fails is left out, your previous good version stays, and an issue is opened on the catalog repository explaining why.
+
+## Plugins that can't ship a zip
+Some plugins compile the user's own firmware into the plugin. Their build contains firmware-derived data, so it must never be published or shared. Those are listed as **Build it yourself**: the catalog shows what you need, the exact build command and a warning, and offers no download.
+
+Your repo needs an open-source license and a root `LICENSE` file, a one-command build script and a `vX.Y.Z` git tag that contains it. Never put a `*-mpc-armv7.zip` on a GitHub release; the nightly build flags it. The pull request adds the same registry file with `"distribution": "build-yourself"` and three extra fields: `requires_user_files`, `build` and, for a build that installs several plugins, `components`. The [catalog README](https://github.com/sd88me/mpc-vst-plugins/blob/main/catalog/README.md#if-your-plugin-cant-publish-a-zip-build-yourself) has a complete example.
 
 ## Keeping it working
 - Keep the `uid`, the `.so` name and the catalog id fixed across releases.

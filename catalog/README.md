@@ -22,6 +22,29 @@ Design: `docs/CATALOG.md`. Formats: `docs/CATALOG_SPEC.md`.
 Open-source licenses (list in `tools/catalog_build.py`) or public source with `source_available` set. No versions or
 checksums go in the entry.
 
+## If your plugin can't publish a zip: build-yourself
+Some ports compile the user's own firmware into the plugin (for example a DSP statically recompiled from an Elektron OS
+file, with ROM samples), so the built `.so` and installer zip are firmware-derived and must never be published or shared.
+Those are listed as **build-yourself**: no release, no download, no checksum. Your repo needs:
+- an open-source SPDX license (not `source_available`) and a root `LICENSE` file;
+- a one-command script that builds a personal installer from the user's own files, and a `vX.Y.Z` git tag that contains it;
+- **no GitHub release with a `*-mpc-armv7.zip` asset**, ever (the nightly build reports it as a licence risk).
+
+Add `catalog/plugins/<id>.json` with `"distribution": "build-yourself"` and the three extra fields:
+```json
+{ "id": "my-firmware-port", "name": "My Firmware Port", "author": "You", "repo": "you/my-firmware-port",
+  "kind": "instrument", "license": "AGPL-3.0-only", "summary": "One line.",
+  "distribution": "build-yourself",
+  "requires_user_files": [ { "name": "Device OS 1.0.syx", "description": "Your own copy of the OS file." } ],
+  "build": { "command": "release/build.sh <Device OS 1.0.syx> [-d <device-ip>]", "script": "release/build.sh",
+             "docs_url": "https://github.com/you/my-firmware-port/blob/{tag}/README.md#building", "needs": ["Docker"] },
+  "components": [ { "id": "my-firmware-port", "name": "My Firmware Port", "kind": "instrument", "uid": "MyFw" } ] }
+```
+`components` is optional; use it when one build installs several plugins. The site shows a "Build it yourself" badge,
+your `requires_user_files`, the exact `build.command`, the tested-on line and a fixed warning that the result contains
+firmware-derived data and must not be shared. `{tag}` in `docs_url` becomes the shown version's tag. Field rules:
+`docs/CATALOG_SPEC.md`. `tested.json` works the same as for release plugins.
+
 ## Report what you tested on
 Optional `tested.json` at the root of your repo's default branch; the nightly build shows it as "Tested on" for the
 matching release:

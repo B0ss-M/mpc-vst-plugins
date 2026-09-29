@@ -44,8 +44,40 @@ Warnings (need a human look): `install.sh`/`uninstall.sh`/`plugin_list.awk` diff
 ```
 `style` (one slug) and `tags` (slugs) are optional and drive the site filters. `source_available: true` is required
 when `license` is not on the open-source list; the site shows a "Restricted use" badge.
-No version fields: they are read from the releases. `id` must equal the manifest `id`, `repo` the manifest
+No version fields: they are read from the releases (or, for `build-yourself`, the git tags). `id` must equal the manifest `id`, `repo` the manifest
 `source_repo`. Stable releases are GitHub releases that are not prereleases; prereleases form the beta channel.
+
+### Build-yourself entries
+For a plugin that cannot publish a zip because the build embeds the user's own firmware. Schema 1 is unchanged: the
+fields below are additive and `distribution` defaults to `"release"`, so existing entries and readers are unaffected.
+```json
+{ "id": "monomodule", "name": "Monomodule One + FX", "author": "sd88me", "repo": "sd88me/mpc-vst-monomodule",
+  "kind": "instrument", "license": "AGPL-3.0-only", "summary": "...",
+  "distribution": "build-yourself",
+  "requires_user_files": [ { "name": "Monomachine OS 1.32B .syx", "description": "Your own copy of the OS file." } ],
+  "build": { "command": "release/release.sh <Monomachine OS 1.32B .syx> [-d <device-ip>]", "script": "release/release.sh",
+             "docs_url": "https://github.com/sd88me/mpc-vst-monomodule/blob/{tag}/README.md#install", "needs": ["Docker"] },
+  "components": [ { "id": "monomodule-one", "name": "Monomodule One", "kind": "instrument", "uid": "MnmO" },
+                  { "id": "monomodule-fx", "name": "Monomodule FX", "kind": "effect", "uid": "MnmF" } ] }
+```
+| field | rules |
+|---|---|
+| `distribution` | `release` (default) or `build-yourself` |
+| `license` | an open SPDX id from the list in `tools/catalog_build.py`; `source_available` is rejected |
+| `requires_user_files` | required, non-empty: `{name, description}` each |
+| `build.command` | required; shown verbatim and must contain `build.script` |
+| `build.script` | required; a path inside the repo (no leading `/`, no `..`); must exist at every listed tag |
+| `build.docs_url` | required, `https://`; `{tag}` is replaced by the shown version's tag (`HEAD` if none) |
+| `build.needs` | optional list of strings (tools the build needs) |
+| `components` | optional non-empty list of `{id, name, kind, uid?}`; ids are unique across the whole registry; `uid` is the four characters from `vst.json` |
+| `asset_pattern` | not allowed |
+
+`requires_user_files`, `build` and `components` are rejected on a `release` entry.
+
+Versions are the repo's `vX.Y.Z` git tags (a leading `v` is optional; other tags are ignored). A tag is listed only if
+`build.script` exists at it. Builder checks and reports in `problems.json`: repo unreadable, no valid tag, script missing
+at a tag, and (loudly, `LICENCE RISK`) a GitHub release with a `*-mpc-armv7.zip` asset. A tag without a root
+`LICENSE`/`COPYING` file gets a version warning. There is no zip, so no `catalog_check.py`, sha256 or size.
 
 ## `catalog.json` (generated)
 `{"schema": 1, "generated": <ISO time>, "plugins": [ <registry fields> + "versions": [ <record>, ... ], "latest",
@@ -53,6 +85,11 @@ No version fields: they are read from the releases. `id` must equal the manifest
 newest first. A record is what `catalog_check.py --json` prints (`version`, `size`, `sha256` of the zip,
 `param_compat`, `max_glibc`, `cpu`, `manifest`) plus `url`, `date`, `channel` (`stable`|`beta`), `notes`, `yanked`
 and `tested` (`[{device, firmware, date}]`), added by the builder.
+
+Every plugin also has `distribution`. For `build-yourself` plugins the record carries the entry's `requires_user_files`,
+`build` and `components`, and each version is `{version, tag, date, channel: "stable", source_url, yanked, downloads: 0,
+warnings, tested, notes: ""}`: no `url`, `size`, `sha256`, `param_compat` or `manifest`. Readers must treat those
+keys as absent for such entries (an installer must skip them: there is nothing to download).
 
 ## Portable paths (for engines)
 Engines locate their data next to the `.so` (`wrapper/plugin_dir.h`, `MODULE_SUBDIR`), never at a fixed `/sdcard`.

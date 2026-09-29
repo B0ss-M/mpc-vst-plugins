@@ -101,3 +101,10 @@ if you do this once:
 - [ ] Optional `tested.json` at the repo root (`[{version, device, firmware, date}]`) after each device test: shown as "Tested on".
 - [ ] One PR adding `catalog/plugins/<id>.json` to mpc-vst-plugins (first release only). Never put versions or checksums in it.
 - [ ] Keep the `uid` and `.so` name fixed; bump `param_compat` (X of X.Y.Z) only when parameter indices change.
+- [ ] **Firmware-derived port?** If the DSP is compiled from the user's own firmware (so the built `.so` embeds firmware
+      code, or the zip carries ROM samples or the OS file), you cannot publish a zip at all. Opt out of the release path:
+      list it as `"distribution": "build-yourself"` (`catalog/README.md`, `docs/CATALOG_SPEC.md`). The repo then needs a
+      one-command build script that makes a per-user installer (and a bit-exactness gate if the recompile can drift), a
+      `vX.Y.Z` tag containing that script, an open licence, and **no** `*-mpc-armv7.zip` on any GitHub release. Still
+      build the installer with `release.py --repo --license` so it is `mpc-plugin.json`-conformant locally
+      (`catalog_check.py --catalog`), but never upload it.
