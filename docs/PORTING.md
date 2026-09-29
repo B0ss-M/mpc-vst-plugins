@@ -45,6 +45,10 @@ for the pattern). This applies to every future port, not just ones that hit the 
       convention (`MODULE_DIR` itself, or `MODULE_DIR/banks/`?) against the port's on-device layout. A mismatch
       fails silently (no files found, default patch) and an offline test built on the upstream's own folder
       layout never shows it; build the test fixture to the port's layout.
+- [ ] Never hardcode `/sdcard/...` in an engine. Set `"defines": {"MODULE_SUBDIR": "\"engine\""}` in vst.json and
+      the wrapper passes `<dir of the .so>/engine` to `create()`, found at runtime with `dladdr` (`wrapper/plugin_dir.h`,
+      also usable directly via `mpc_plugin_dir()`), so the plugin works from `/sdcard/vst`, `/media/*/...` or anywhere
+      else. The `.so` must be dlopen'd by absolute path (MPC does this from the plugin list's `file=`).
 - [ ] State saved via chunks (`effGetChunk`/`effSetChunk`).
 - [ ] Offline x86 test: `tools/test_port.sh <port>/vst.json` prints PASSED (instances, parameter round-trip,
       options, popups, MIDI → audio, chunk restore, under ASan).

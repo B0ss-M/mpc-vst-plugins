@@ -7,6 +7,7 @@
 The zip unpacks to <Name>-<version>/ with:
   install.sh / uninstall.sh   run on the device as root (MPC is stopped and restarted, MPC.settings is backed up)
   INSTALL.md                  generated instructions (scripted and manual), requirements, bench results
+  mpc-plugin.json             machine-readable manifest for the catalog (docs/CATALOG_SPEC.md)
   plugin.xml                  the pluginList-arm <PLUGIN> entry
   payload/vst/...             the .so (+ --extra payload), copied to the directory in the entry's file="..."
   payload/Synths/<skin>/      the skin, copied to /sdcard/Synths
@@ -33,6 +34,10 @@ ap.add_argument("--version", required=True)
 ap.add_argument("--extra", action="append", default=[], help="SRC:DEST extra payload, DEST under vst/ (e.g. bin:vst/x)")
 ap.add_argument("--bench", help="JSON line from `tools/bench.sh ... -j` on a Gen1 device")
 ap.add_argument("--about", default="", help="one-line description for INSTALL.md")
+ap.add_argument("--id", help="catalog id: lowercase letters, digits, hyphens (default: from the plugin name)")
+ap.add_argument("--repo", help="source repo, owner/name (for the catalog manifest)")
+ap.add_argument("--license", help="SPDX license id of the plugin (for the catalog manifest)")
+ap.add_argument("--requires", default="", help="extra requirements, one line (e.g. 'MockbaMod firmware')")
 ap.add_argument("-o", "--out", default="dist")
 a = ap.parse_args()
 
@@ -144,6 +149,17 @@ See `SHA256SUMS`. Made with [mpc-vst-plugins](https://github.com/sd88me/mpc-vst-
            where="Instrument plugins" if kind == "instrument" else "Insert effects")
 open(os.path.join(root, "INSTALL.md"), "w").write(install_md)
 
+def max_glibc(path):
+    """Highest GLIBC_x.y[.z] symbol version the .so asks for, as 'x.y[.z]' (None if it needs none)."""
+    found = re.findall(rb"GLIBC_(\d+(?:\.\d+){1,2})", open(path, "rb").read())
+    return max((f.decode() for f in found), key=lambda v: tuple(map(int, v.split(".")))) if found else None
+
+
+def elf_machine(path):
+    d = open(path, "rb").read(20)
+    return {40: "armv7", 62: "x86_64", 183: "aarch64", 3: "x86"}.get(int.from_bytes(d[18:20], "little"), "unknown") if d[:4] == b"\x7fELF" else "not-elf"
+
+
 def walk(top):
     """Every file and symlink under top (symlinks, including ones to directories, are not followed)."""
     for d, dirs, files in os.walk(top):
@@ -151,6 +167,32 @@ def walk(top):
         for f in sorted(files + [x for x in dirs if os.path.islink(os.path.join(d, x))]):
             yield os.path.join(d, f)
 
+
+plugin_id = a.id or re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
+if not re.fullmatch(r"[a-z0-9]+(-[a-z0-9]+)*", plugin_id):
+    raise SystemExit("--id must be lowercase letters, digits and hyphens")
+manifest = {
+    "schema": 1,
+    "id": plugin_id,
+    "name": name,
+    "version": a.version,
+    "kind": kind,
+    "uid": attr["uid"],
+    "manufacturer": attr["manufacturer"],
+    "so": so_name,
+    "so_dir": so_dir,
+    "skin": skin_name,
+    "extras": extras,
+    "arch": elf_machine(a.so),
+    "max_glibc": max_glibc(a.so),
+    "param_compat": int(a.version.split(".")[0]),
+    "about": a.about,
+    "requires": a.requires,
+    "source_repo": a.repo,
+    "license": a.license,
+    "cpu": {"p99_pct": bench["p99_pct"], "max_pct": bench["max_pct"], "verdict": bench["verdict"]} if bench else None,
+}
+open(os.path.join(root, "mpc-plugin.json"), "w").write(json.dumps(manifest, indent=2) + "\n")
 
 sums = []
 for p in walk(root):

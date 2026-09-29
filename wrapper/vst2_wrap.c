@@ -9,6 +9,9 @@
  * small FIFO, so any host block size works; with 128-frame host blocks each
  * process() call renders exactly one DSP block and MIDI lands at its start.
  * ========================================================================== */
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE   /* dladdr, for plugin_dir.h; must precede every include */
+#endif
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -22,6 +25,9 @@
 #ifndef MODULE_DIR
 #define MODULE_DIR NULL /* set via vst.json "defines" for a DSP that reads its own files
                           * (ROMs, etc.) from "<module_dir>/..." (see jv880's create_instance) */
+#endif
+#ifdef MODULE_SUBDIR /* vst.json "defines": {"MODULE_SUBDIR": "\"engine\""}: data dir = <dir of the .so>/engine, found at runtime */
+#include "plugin_dir.h"
 #endif
 
 #include "engine.h"
@@ -382,7 +388,15 @@ __attribute__((visibility("default"))) AEffect *VSTPluginMain(audioMasterCallbac
     wrap_t *w = calloc(1, sizeof *w);
     if (!w) return NULL;
     for (int i = 0; i < NPARAMS; i++) w->shadow[i] = -1;
+#ifdef MODULE_SUBDIR
+    char data_dir[600], here[512];
+    const char *module_dir = MODULE_DIR;   /* an absolute MODULE_DIR is still the fallback */
+    if (mpc_plugin_dir(here, sizeof here) && snprintf(data_dir, sizeof data_dir, "%s/%s", here, MODULE_SUBDIR) < (int)sizeof data_dir)
+        module_dir = data_dir;
+    w->dsp = g_api->create(module_dir);
+#else
     w->dsp = g_api->create(MODULE_DIR);
+#endif
     if (!w->dsp) { free(w); return NULL; }
     w->master = master;
     w->pos = DSP_BLOCK;

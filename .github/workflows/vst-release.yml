@@ -42,6 +42,18 @@ on:
         description: One line about the plugin, for INSTALL.md and the release notes
         type: string
         default: ''
+      plugin_id:
+        description: Catalog id (lowercase, hyphens); default is derived from the plugin name
+        type: string
+        default: ''
+      license:
+        description: SPDX license id of the plugin (e.g. MIT); required to be listed in the catalog
+        type: string
+        default: ''
+      requires:
+        description: One line of extra requirements for the manifest (e.g. a firmware)
+        type: string
+        default: ''
       zig:
         description: zig version to install, if the build needs it
         type: string
@@ -117,6 +129,9 @@ jobs:
         env:
           EXTRA: ${{ inputs.extra }}
           ABOUT: ${{ inputs.about }}
+          PLUGIN_ID: ${{ inputs.plugin_id }}
+          LICENSE_ID: ${{ inputs.license }}
+          REQUIRES: ${{ inputs.requires }}
         run: |
           B="$VST_DIR/build"
           entry="$B/pluginlist-entry.xml"
@@ -126,7 +141,10 @@ jobs:
           skin="${skins[0]%/}"
           [ -d "$skin" ] || { echo "::error::no skin folder in $B/skin"; exit 1; }
           file -b "$so" | grep -q 'ELF 32-bit LSB.*ARM' || { echo "::error::$so is not a 32-bit ARM ELF: $(file -b "$so")"; exit 1; }
-          args=(--so "$so" --skin "$skin" --entry "$entry" --version "$VERSION" --about "$ABOUT" -o "$GITHUB_WORKSPACE/dist")
+          args=(--so "$so" --skin "$skin" --entry "$entry" --version "$VERSION" --about "$ABOUT" --repo "$GITHUB_REPOSITORY" -o "$GITHUB_WORKSPACE/dist")
+          [ -z "$PLUGIN_ID" ] || args+=(--id "$PLUGIN_ID")
+          [ -z "$LICENSE_ID" ] || args+=(--license "$LICENSE_ID")
+          [ -z "$REQUIRES" ] || args+=(--requires "$REQUIRES")
           if [ -f "$VST_DIR/bench.txt" ]; then
             args+=(--bench "$VST_DIR/bench.txt"); bench="from committed $VST_DIR/bench.txt"
           else
@@ -137,6 +155,9 @@ jobs:
           mkdir -p "$GITHUB_WORKSPACE/previews"
           python3 "$MPC_VST/tools/studio.py" preview "$skin/Plugin Skins" -o "$GITHUB_WORKSPACE/previews/page_%d.png"
           zip=$(ls "$GITHUB_WORKSPACE"/dist/*.zip)
+          # catalog conformance (docs/CATALOG_SPEC.md): warnings are shown, errors fail the run
+          if [ -n "$LICENSE_ID" ]; then flag=--catalog; else flag=""; echo "::warning::no license input: this release can't be listed in the catalog"; fi
+          python3 "$MPC_VST/tools/catalog_check.py" "$zip" $flag
           echo "zip=$zip" >> "$GITHUB_OUTPUT"
           echo "name=$(sed -n 's/.* name="\([^"]*\)".*/\1/p' "$entry")" >> "$GITHUB_OUTPUT"
           echo "bench=$bench" >> "$GITHUB_OUTPUT"
