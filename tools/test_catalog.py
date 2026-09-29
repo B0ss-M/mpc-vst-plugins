@@ -25,7 +25,7 @@ def fake_so(path, machine=40, glibc=b"GLIBC_2.30"):
     open(path, "wb").write(bytes(hdr) + b"\0" + glibc + b"\0")
 
 
-class CatalogTest(unittest.TestCase):
+class Base(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, self.tmp)
@@ -55,6 +55,8 @@ class CatalogTest(unittest.TestCase):
                 zout.writestr(i, data)
         return out
 
+
+class CatalogTest(Base):
     def test_good_package(self):
         z = self.build()
         errors, warnings, rec = catalog_check.check(z, catalog=True, expect_id="test-synth", expect_repo="acme/test-synth")
@@ -103,6 +105,58 @@ class CatalogTest(unittest.TestCase):
     def test_id_mismatch_with_registry(self):
         e, _, _ = catalog_check.check(self.build(), expect_id="other")
         self.assertTrue(any("registry id" in x for x in e))
+
+
+
+import catalog_build  # noqa: E402
+
+
+class FakeGitHub:
+    def __init__(self, releases, zips):
+        self.releases, self.zips = releases, zips
+
+    def list_releases(self, repo):
+        if repo not in self.releases:
+            raise RuntimeError("404")
+        return self.releases[repo]
+
+    def download(self, asset, dest):
+        shutil.copy(self.zips[asset["id"]], dest)
+
+
+class BuildTest(Base):
+    ENTRY = {"id": "test-synth", "name": "Test Synth", "author": "A", "repo": "acme/test-synth", "kind": "instrument",
+             "license": "MIT", "summary": "s"}
+
+    def rel(self, tag, aid, pre=False, name="x-mpc-armv7.zip"):
+        return {"tag_name": tag, "prerelease": pre, "draft": False, "published_at": "2026-09-29T00:00:00Z", "body": "notes",
+                "assets": [{"id": aid, "name": name, "browser_download_url": "https://x/" + name, "download_count": 3}]}
+
+    def test_build_keeps_good_versions_and_reports_bad(self):
+        good, newer = self.build("1.0.0"), self.build("1.1.0")
+        bad = self.tamper(self.build("1.2.0"), "payload/vst/test_synth.so", lambda d: d + b"x")
+        gh = FakeGitHub({"acme/test-synth": [self.rel("v1.2.0", 3), self.rel("v1.1.0", 2), self.rel("v1.0.0", 1),
+                                              self.rel("v1.3.0-b", 4, pre=True, name="nope.txt")]},
+                        {1: good, 2: newer, 3: bad})
+        cat, problems = catalog_build.build([self.ENTRY], gh, os.path.join(self.tmp, "cache"), {"test-synth@1.0.0"})
+        p = cat["plugins"][0]
+        self.assertEqual([v["version"] for v in p["versions"]], ["1.1.0", "1.0.0"])
+        self.assertEqual(p["latest"], "1.1.0")
+        self.assertTrue(p["versions"][1]["yanked"])
+        self.assertEqual(p["downloads"], 6)
+        self.assertEqual(sorted((x["tag"] for x in problems)), ["v1.2.0", "v1.3.0-b"])
+
+    def test_unreadable_repo_is_reported_not_fatal(self):
+        cat, problems = catalog_build.build([self.ENTRY], FakeGitHub({}, {}), os.path.join(self.tmp, "c"), set())
+        self.assertEqual(cat["plugins"][0]["versions"], [])
+        self.assertIsNone(cat["plugins"][0]["latest"])
+        self.assertIn("cannot list", problems[0]["error"])
+
+    def test_registry_rules(self):
+        self.assertEqual(catalog_build.check_entry(self.ENTRY, "x/test-synth.json"), [])
+        self.assertTrue(catalog_build.check_entry({**self.ENTRY, "license": "Proprietary"}))
+        self.assertTrue(catalog_build.check_entry(self.ENTRY, "x/other.json"))
+        self.assertTrue(catalog_build.check_entry({**self.ENTRY, "repo": "nope"}))
 
 
 if __name__ == "__main__":

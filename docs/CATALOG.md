@@ -78,9 +78,9 @@ Each phase is independently useful. Phases 0 to 3 are doable in this repo; the c
 here first and move to its own repo (recommended, for community ownership) once the format settles.
 
 ### Phase 0: Decide (needs the user)
-- [ ] Catalog home: separate repo (recommended, e.g. `mpc-vst-catalog`) vs `catalog/` in this repo. Hosting: GitHub Pages.
+- [x] Catalog home: `catalog/` in this repo (decided 2026-09-29; can be split out later). Hosting: GitHub Pages.
 - [ ] Naming and domain (a `github.io` URL is fine to start).
-- [ ] Inclusion policy: open source licence required, ARM armv7 zip, stated device compatibility, no closed binaries.
+- [x] Inclusion policy: open-source licence required (SPDX list in `tools/catalog_build.py`), armv7 zip, no closed binaries (decided 2026-09-29).
 - [ ] Ask early adopters which plugins exist today and which already publish GitHub releases.
 
 ### Phase 1: Make every release self-describing
@@ -97,14 +97,14 @@ here first and move to its own repo (recommended, for community ownership) once 
 - [ ] Back-fill: publish catalog-conformant releases for the existing ports (Maze, JV-880, Acid, Euclidier, ...).
 
 ### Phase 2: The catalog builder
-- [ ] `tools/catalog_build.py`: read `plugins/*.json`, list GitHub releases (API, token via Actions), download
+- [x] (2026-09-29, tested with a fake GitHub source; not yet run against real releases) `tools/catalog_build.py`: read `plugins/*.json`, list GitHub releases (API, token via Actions), download
       matching assets, validate, write `catalog.json` + `catalog.schema.json`. Idempotent and cached by asset id.
 - [ ] Failure handling: bad version excluded, previous good version kept, issue opened on the plugin repo.
-- [ ] Workflow: nightly cron + `repository_dispatch`/`workflow_dispatch`; an optional one-line "ping" step ports
+- [x] (`.github/workflows/catalog.yml`, builds and uploads an artifact; Pages deploy comes with Phase 3) Workflow: nightly cron + `repository_dispatch`/`workflow_dispatch`; an optional one-line "ping" step ports
       can add to their release workflow for instant updates.
-- [ ] PR check for registry PRs: schema, repo exists, latest release validates, uid unique. Issue template
+- [x] (registry rules and licence list; 'latest release validates' runs in the full build) PR check for registry PRs: schema, repo exists, latest release validates, uid unique. Issue template
       "Add my plugin".
-- [ ] `yanked.json` mechanism for pulling a bad release without touching the author's repo.
+- [x] `catalog/yanked.json` mechanism for pulling a bad release without touching the author's repo.
 
 ### Phase 3: The website
 - [ ] `tools/catalog_site.py` generates the site from `catalog.json`; deploy with Pages from the same workflow.

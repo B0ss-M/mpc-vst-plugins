@@ -1,0 +1,34 @@
+# Builds catalog/dist/catalog.json from the registry and the plugins' GitHub releases (docs/CATALOG.md).
+# PRs touching the catalog only validate the registry entries; the nightly and manual runs do the full build.
+name: Catalog build
+on:
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['catalog/**', 'tools/catalog_*.py']
+  pull_request:
+    paths: ['catalog/**', 'tools/catalog_*.py']
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tests
+        run: python3 tools/test_catalog.py
+      - name: Validate the registry
+        run: python3 tools/catalog_build.py --check-registry
+      - name: Build the catalog
+        if: ${{ github.event_name != 'pull_request' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 tools/catalog_build.py
+      - name: Upload catalog.json and problems.json
+        if: ${{ github.event_name != 'pull_request' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: catalog
+          path: catalog/dist/
