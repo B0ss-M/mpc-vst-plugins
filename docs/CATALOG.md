@@ -46,7 +46,8 @@ installer. What the catalog holds instead of a download:
 - `components` (optional): the plugins one build installs (`id`, `name`, `kind`, `uid`), because one repo may install
   several (Monomodule One and FX). The kind filter matches any component.
 - **Versions are git tags** `vX.Y.Z`, not release assets. The newest is `latest`. A tag counts only if the build script
-  exists at that tag. There is no zip, no sha256 and no `catalog_check.py`; `tested.json` is still read.
+  exists at that tag; an older tag without it is skipped quietly (tags are never moved) and only the newest tag missing
+  it is reported. There is no zip, no sha256 and no `catalog_check.py`; `tested.json` is still read.
 - **Guardrails** (`tools/catalog_build.py`): the repo must be readable; the licence must be open; `requires_user_files`
   must be non-empty; at least one valid tag must contain the script; and any GitHub release carrying a
   `*-mpc-armv7.zip` asset is reported loudly in `problems.json` (and so as a catalog issue), because publishing a built
