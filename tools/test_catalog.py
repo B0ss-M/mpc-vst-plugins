@@ -255,6 +255,159 @@ class PagesTest(unittest.TestCase):
             self.assertIn('href="%s.html"' % p["slug"], idx)
         self.assertNotIn("/*NAV*/", idx)
 
+class FakeTags:
+    """GitHub stand-in for build-yourself entries: tags, files per tag, releases, dates."""
+    def __init__(self, tags=None, files=(), releases=None, tested=None):
+        self.tags, self.files, self.releases, self._tested = tags or {}, set(files), releases or {}, tested or {}
+
+    def list_tags(self, repo):
+        if repo not in self.tags:
+            raise RuntimeError("404 Not Found")
+        return [{"name": n, "sha": "sha-" + n} for n in self.tags[repo]]
+
+    def list_releases(self, repo):
+        return self.releases.get(repo, [])
+
+    def file_exists(self, repo, path, ref):
+        return (repo, ref, path) in self.files
+
+    def tag_date(self, repo, sha):
+        return "2026-09-2" + str(len(sha) % 10)
+
+    def tested(self, repo):
+        return self._tested.get(repo, [])
+
+
+BY_ENTRY = {
+    "id": "fw-synth", "name": "Firmware Synth", "author": "A", "repo": "acme/fw-synth", "kind": "instrument", "license": "AGPL-3.0-only",
+    "summary": "s", "distribution": "build-yourself",
+    "requires_user_files": [{"name": "OS.syx", "description": "Your own OS file."}],
+    "build": {"command": "release/build.sh <OS.syx> [-d <ip>]", "script": "release/build.sh", "docs_url": "https://github.com/acme/fw-synth/blob/{tag}/README.md", "needs": ["Docker"]},
+    "components": [{"id": "fw-one", "name": "FW One", "kind": "instrument", "uid": "FwOn"}, {"id": "fw-fx", "name": "FW FX", "kind": "effect", "uid": "FwFx"}],
+}
+
+
+class BuildYourselfTest(Base):
+    def entry(self, **kw):
+        e = json.loads(json.dumps(BY_ENTRY))
+        e.update(kw)
+        return e
+
+    def test_registry_accepts_a_valid_entry(self):
+        self.assertEqual(catalog_build.check_entry(self.entry(), "x/fw-synth.json"), [])
+
+    def test_registry_guardrails(self):
+        bad = {
+            "no user files": self.entry(requires_user_files=[]),
+            "user file without description": self.entry(requires_user_files=[{"name": "x"}]),
+            "no build": {k: v for k, v in self.entry().items() if k != "build"},
+            "script outside the repo": self.entry(build=dict(BY_ENTRY["build"], script="../x.sh", command="../x.sh")),
+            "absolute script": self.entry(build=dict(BY_ENTRY["build"], script="/x.sh", command="/x.sh")),
+            "command does not run the script": self.entry(build=dict(BY_ENTRY["build"], command="make")),
+            "http docs url": self.entry(build=dict(BY_ENTRY["build"], docs_url="http://x.io")),
+            "not an open license": self.entry(license="MAME license"),
+            "source_available is not enough": self.entry(license="MAME license", source_available=True),
+            "asset_pattern makes no sense": self.entry(asset_pattern="*.zip"),
+            "bad component": self.entry(components=[{"id": "Bad Id", "name": "x", "kind": "instrument"}]),
+            "bad component uid": self.entry(components=[{"id": "a", "name": "x", "kind": "instrument", "uid": "toolong"}]),
+            "duplicate component": self.entry(components=[{"id": "a", "name": "x", "kind": "instrument"}, {"id": "a", "name": "y", "kind": "effect"}]),
+            "unknown distribution": self.entry(distribution="download"),
+        }
+        for why, e in bad.items():
+            self.assertTrue(catalog_build.check_entry(e, "x/fw-synth.json"), why)
+
+    def test_release_entries_cannot_carry_build_fields(self):
+        e = dict(BuildTest.ENTRY, requires_user_files=BY_ENTRY["requires_user_files"])
+        self.assertTrue(catalog_build.check_entry(e, "x/test-synth.json"))
+        self.assertEqual(catalog_build.check_entry(dict(BuildTest.ENTRY, distribution="release"), "x/test-synth.json"), [])
+        self.assertEqual(catalog_build.check_entry(BuildTest.ENTRY, "x/test-synth.json"), [])   # default distribution
+
+    def test_component_ids_are_unique_across_the_registry(self):
+        d = os.path.join(self.tmp, "reg")
+        os.makedirs(d)
+        a, b = self.entry(), self.entry(id="other", repo="acme/other")
+        for e in (a, b):
+            json.dump(e, open(os.path.join(d, e["id"] + ".json"), "w"))
+        entries, problems = catalog_build.load_registry(d)
+        self.assertEqual([e["id"] for e in entries], ["fw-synth"])
+        self.assertTrue(any("component id" in m for _, m in problems))
+
+    def test_versions_come_from_tags_and_need_the_script(self):
+        e = self.entry()
+        before = json.dumps(e, sort_keys=True)
+        gh = FakeTags(tags={"acme/fw-synth": ["v0.9.0", "v0.9.1", "v1.0.0-rc1", "nightly"]},
+                      files={("acme/fw-synth", "v0.9.1", "release/build.sh"), ("acme/fw-synth", "v0.9.1", "LICENSE"),
+                             ("acme/fw-synth", "v0.9.0", "LICENSE")},
+                      tested={"acme/fw-synth": [{"version": "0.9.1", "device": "Akai Force", "firmware": "3.9.1", "date": "2026-09-29"}]})
+        cat, problems = catalog_build.build([e], gh, os.path.join(self.tmp, "c"), set())
+        p = cat["plugins"][0]
+        self.assertEqual([v["version"] for v in p["versions"]], ["0.9.1"])   # v0.9.0 has no script; rc and nightly are ignored
+        self.assertEqual(p["latest"], "0.9.1")
+        self.assertEqual(p["distribution"], "build-yourself")
+        v = p["versions"][0]
+        self.assertEqual((v["tag"], v["source_url"], v["tested"]), ("v0.9.1", "https://github.com/acme/fw-synth/tree/v0.9.1", [{"device": "Akai Force", "firmware": "3.9.1", "date": "2026-09-29"}]))
+        for k in ("url", "sha256", "size", "param_compat", "manifest"):
+            self.assertNotIn(k, v)   # nothing is published: no download, checksum or zip manifest
+        self.assertEqual(v["warnings"], [])   # this tag has a LICENSE file
+        self.assertEqual([c["id"] for c in p["components"]], ["fw-one", "fw-fx"])
+        self.assertEqual([x["tag"] for x in problems], ["v0.9.0"])
+        self.assertIn("does not exist at this tag", problems[0]["error"])
+        self.assertEqual(json.dumps(e, sort_keys=True), before)   # the registry entry is not mutated
+
+    def test_license_file_missing_is_a_warning_on_the_version(self):
+        gh = FakeTags(tags={"acme/fw-synth": ["v0.1.0"]}, files={("acme/fw-synth", "v0.1.0", "release/build.sh")})
+        cat, problems = catalog_build.build([self.entry()], gh, os.path.join(self.tmp, "c"), set())
+        self.assertEqual(cat["plugins"][0]["versions"][0]["warnings"], ["no LICENSE file at the root of this tag"])
+        self.assertEqual(problems, [])
+
+    def test_published_zip_is_reported_loudly_but_entry_stays(self):
+        rel = {"tag_name": "v0.1.0", "draft": False, "assets": [{"id": 1, "name": "FW-0.1.0-mpc-armv7.zip", "browser_download_url": "https://x/z"}]}
+        gh = FakeTags(tags={"acme/fw-synth": ["v0.1.0"]}, files={("acme/fw-synth", "v0.1.0", "release/build.sh")}, releases={"acme/fw-synth": [rel]})
+        cat, problems = catalog_build.build([self.entry()], gh, os.path.join(self.tmp, "c"), set())
+        self.assertEqual(cat["plugins"][0]["latest"], "0.1.0")
+        self.assertEqual(len(problems), 1)
+        self.assertIn("LICENCE RISK", problems[0]["error"])
+        self.assertEqual(problems[0]["tag"], "v0.1.0")
+        gh.releases["acme/fw-synth"][0]["draft"] = True   # a draft is not public
+        self.assertEqual(catalog_build.build([self.entry()], gh, os.path.join(self.tmp, "c"), set())[1], [])
+
+    def test_missing_repo_and_no_tags_are_reported(self):
+        cat, problems = catalog_build.build([self.entry()], FakeTags(), os.path.join(self.tmp, "c"), set())
+        self.assertEqual(cat["plugins"][0]["versions"], [])
+        self.assertIsNone(cat["plugins"][0]["latest"])
+        self.assertIn("cannot read the repo", problems[0]["error"])
+        cat, problems = catalog_build.build([self.entry()], FakeTags(tags={"acme/fw-synth": ["nightly"]}), os.path.join(self.tmp, "c"), set())
+        self.assertIn("no vX.Y.Z tag", problems[0]["error"])
+
+    def test_yanked_tag_is_never_latest(self):
+        gh = FakeTags(tags={"acme/fw-synth": ["v0.2.0", "v0.1.0"]},
+                      files={("acme/fw-synth", t, "release/build.sh") for t in ("v0.2.0", "v0.1.0")} | {("acme/fw-synth", t, "LICENSE") for t in ("v0.2.0", "v0.1.0")})
+        cat, _ = catalog_build.build([self.entry()], gh, os.path.join(self.tmp, "c"), {"fw-synth@0.2.0"})
+        self.assertEqual(cat["plugins"][0]["latest"], "0.1.0")
+
+    def test_release_entries_are_untouched_in_a_mixed_catalog(self):
+        class Mixed(FakeTags):
+            def download(self, asset, dest):
+                shutil.copy(good, dest)
+        good = self.build("1.0.0")
+        rel = {"tag_name": "v1.0.0", "prerelease": False, "draft": False, "published_at": "2026-09-29T00:00:00Z", "body": "",
+               "assets": [{"id": 1, "name": "x-mpc-armv7.zip", "browser_download_url": "https://x/x", "download_count": 3}]}
+        gh = Mixed(tags={"acme/fw-synth": ["v0.1.0"]}, files={("acme/fw-synth", "v0.1.0", "release/build.sh")}, releases={"acme/test-synth": [rel]})
+        cat, problems = catalog_build.build([BuildTest.ENTRY, self.entry()], gh, os.path.join(self.tmp, "c"), set())
+        r = [p for p in cat["plugins"] if p["id"] == "test-synth"][0]
+        self.assertEqual((r["distribution"], r["latest"], r["downloads"]), ("release", "1.0.0", 3))
+        self.assertIn("sha256", r["versions"][0])
+        self.assertIn("url", r["versions"][0])
+        self.assertFalse([x for x in problems if x["id"] == "test-synth"])
+
+    def test_site_shows_build_instructions_not_downloads(self):
+        html = catalog_site.render({"schema": 1, "generated": "x", "plugins": []})
+        self.assertIn("The result contains firmware-derived data: build it yourself, install it on your own devices only, never share it.", html)
+        self.assertIn("Build instructions", html)
+        cat = {"schema": 1, "generated": "x", "plugins": [{"id": "fw-synth", "name": "FW", "author": "A", "summary": "s", "versions": [
+            {"version": "0.1.0", "tag": "v0.1.0", "date": "2026-09-29", "channel": "stable", "yanked": False, "source_url": "https://github.com/a/b/tree/v0.1.0"}]}]}
+        self.assertIn("<link href=\"https://github.com/a/b/tree/v0.1.0\"/>", catalog_site.atom(cat))
+
 
 if __name__ == "__main__":
     unittest.main()
