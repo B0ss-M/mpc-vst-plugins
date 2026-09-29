@@ -570,7 +570,8 @@ def handler(st, host, stop):
                                                         % " ".join(skin_assets.IMAGE_EXTS)})
                     os.makedirs(os.path.dirname(path), exist_ok=True)
                     write_file(path, body)
-                    return self.send(200, {"name": name, "size": skin_assets.image_size(path)})
+                    is_img = os.path.splitext(name)[1].lower() in skin_assets.IMAGE_EXTS
+                    return self.send(200, {"name": name, "size": skin_assets.image_size(path) if is_img else None})
                 if u.path == "/api/render":
                     return self.send(200, render(req.get("head", []), req.get("widgets", []), st.by_key, st.dir))
                 if u.path == "/api/parse":
