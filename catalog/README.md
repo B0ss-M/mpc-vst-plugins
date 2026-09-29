@@ -22,6 +22,16 @@ Design: `docs/CATALOG.md`. Formats: `docs/CATALOG_SPEC.md`.
 Open-source licenses (list in `tools/catalog_build.py`) or public source with `source_available` set. No versions or
 checksums go in the entry.
 
+## Report what you tested on
+Optional `tested.json` at the root of your repo's default branch; the nightly build shows it as "Tested on" for the
+matching release:
+```json
+[ { "version": "1.2.0", "device": "MPC Live II", "firmware": "3.6.0", "date": "2026-09-29" } ]
+```
+
+## Feed
+The site publishes `feed.xml` (Atom, newest 50 non-yanked releases).
+
 ## Yank a release
 Add `"<id>@<version>"` (or `"<id>@*"` for all versions) to `yanked.json`. It stays in the catalog marked yanked and is
 never offered as the latest.

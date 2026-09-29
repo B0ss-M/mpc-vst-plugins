@@ -11,6 +11,8 @@ built-in JUCE plugin host, with native MPC screen skins. Start here:
 4. `.claude/skills/mpc-vst-plugin/SKILL.md`: the build → skin → register → test workflow and gotchas.
 
 Ground rules:
+- Every port and release must be catalog-conformant (`mpc-plugin.json` via `release.py --repo --license`, `catalog_check.py --catalog`
+  OK): see `docs/PORTING.md` section 5 and `docs/CATALOG.md`.
 - Offline first: x86 host test (`tools/test_port.sh <vst.json>`, ASan) and an offline skin preview before anything goes
   to a device.
 - The device is shared with the user's live setup. Ask before restarting MPC, back up `MPC.settings` before

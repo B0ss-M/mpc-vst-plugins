@@ -42,7 +42,7 @@ def check(zpath, catalog=False, expect_id=None, expect_repo=None):
         links = [n for n in names if (z.getinfo(n).external_attr >> 16) & 0o170000 == 0o120000]
         for n in links:
             t = z.read(n).decode(errors="replace")
-            if t.startswith("/") or ".." in t.split("/"):
+            if t.startswith("/") or not posixpath.normpath(posixpath.join(posixpath.dirname(n), t)).startswith(top + "/"):
                 err("symlink %s points outside the package: %s" % (n, t))
 
     for need in ("install.sh", "uninstall.sh", "plugin_list.awk", "plugin.xml", "INSTALL.md", "SHA256SUMS", "mpc-plugin.json"):

@@ -102,6 +102,22 @@ class CatalogTest(Base):
         e, _, _ = catalog_check.check(z2, catalog=True)
         self.assertTrue(any("license" in x for x in e))
 
+    def test_symlinks_inside_package_ok_outside_rejected(self):
+        z = self.build()
+        def add(target):
+            out = z + "." + str(abs(hash(target))) + ".zip"
+            with zipfile.ZipFile(z) as zin, zipfile.ZipFile(out, "w") as zout:
+                for i in zin.infolist():
+                    zout.writestr(i, zin.read(i.filename))
+                top = zin.namelist()[0].split("/")[0]
+                i = zipfile.ZipInfo(top + "/payload/vst/d1/l"); i.external_attr = 0o120777 << 16
+                zout.writestr(i, target)
+            return out
+        e, _, _ = catalog_check.check(add("../d2/x"), catalog=True)
+        self.assertFalse(any("symlink" in x for x in e))
+        e, _, _ = catalog_check.check(add("../../../../etc/passwd"), catalog=True)
+        self.assertTrue(any("symlink" in x for x in e))
+
     def test_id_mismatch_with_registry(self):
         e, _, _ = catalog_check.check(self.build(), expect_id="other")
         self.assertTrue(any("registry id" in x for x in e))
@@ -146,6 +162,14 @@ class BuildTest(Base):
         self.assertEqual(p["downloads"], 6)
         self.assertEqual(sorted((x["tag"] for x in problems)), ["v1.2.0", "v1.3.0-b"])
 
+    def test_tested_json_attaches_to_matching_version(self):
+        gh = FakeGitHub({"acme/test-synth": [self.rel("v1.0.0", 1)]}, {1: self.build("1.0.0")})
+        gh.tested = lambda repo: [{"version": "v1.0.0", "device": "MPC Live II", "firmware": "3.6", "date": "2026-09-01"},
+                                  {"version": "9.9.9", "device": "Force"}]
+        cat, _ = catalog_build.build([self.ENTRY], gh, os.path.join(self.tmp, "c"), set())
+        self.assertEqual(cat["plugins"][0]["versions"][0]["tested"],
+                         [{"device": "MPC Live II", "firmware": "3.6", "date": "2026-09-01"}])
+
     def test_unreadable_repo_is_reported_not_fatal(self):
         cat, problems = catalog_build.build([self.ENTRY], FakeGitHub({}, {}), os.path.join(self.tmp, "c"), set())
         self.assertEqual(cat["plugins"][0]["versions"], [])
@@ -159,6 +183,18 @@ class BuildTest(Base):
         self.assertTrue(catalog_build.check_entry({**self.ENTRY, "repo": "nope"}))
 
 
+import catalog_issues  # noqa: E402
+
+
+class IssuesTest(unittest.TestCase):
+    def test_plan_dedupes_and_skips_open(self):
+        pr = [{"id": "a", "tag": "v1", "error": "x"}, {"id": "a", "tag": "v1", "error": "y"},
+              {"id": "a", "tag": "v2", "error": "z"}, {"id": "b", "tag": None, "error": "404"}]
+        got = catalog_issues.plan(pr, {"Catalog: a v2 failed validation"})
+        self.assertEqual([t for t, _ in got], ["Catalog: a v1 failed validation", "Catalog: b cannot be read"])
+        self.assertIn("- x", got[0][1]); self.assertIn("- y", got[0][1])
+
+
 import catalog_site  # noqa: E402
 
 
@@ -169,6 +205,15 @@ class SiteTest(unittest.TestCase):
         self.assertNotIn("/*CATALOG_JSON*/", html)
         data = html.split('<script id="data" type="application/json">')[1].split("</script>")[0]
         self.assertEqual(json.loads(data), cat)   # round-trips, and the embedded "</script>" can't end the block
+
+    def test_atom_feed_skips_yanked_and_escapes(self):
+        v = lambda ver, y: {"version": ver, "date": "2026-09-2%s" % ver[0], "url": "https://x/a?b=1&c=2", "yanked": y, "channel": "stable"}
+        cat = {"schema": 1, "generated": "g", "plugins": [{"id": "a", "name": "A <&>", "author": "Z", "summary": "s",
+                                                         "versions": [v("2.0", False), v("1.0", True)]}]}
+        import xml.dom.minidom
+        doc = xml.dom.minidom.parseString(catalog_site.atom(cat, "https://e.io/x/"))
+        self.assertEqual(len(doc.getElementsByTagName("entry")), 1)
+        self.assertIn("A <&>", doc.getElementsByTagName("title")[1].firstChild.data)
 
     def test_registry_style_and_source_available(self):
         e = dict(BuildTest.ENTRY, license="MAME license")

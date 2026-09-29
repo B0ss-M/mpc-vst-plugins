@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>MPC OS Plugin Catalog</title>
 <meta name="description" content="Community-built VST2 plugins for Akai MPC and Force standalone units, with versions, licenses and checksummed downloads.">
+<link rel="alternate" type="application/atom+xml" title="New releases" href="feed.xml">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Titillium+Web:wght@400;600;700&display=swap">
 <style>
 /* Layout: sticky bar, masthead with a line-drawn MPC (screen, Q-Link encoders, jog wheel, buttons, 16 pads), filters, card grid.
@@ -213,6 +214,7 @@ function card(p) {
     (v ? '<span class="ver" title="Latest ' + esc(v.channel) + ' release">v' + esc(v.version) + (v.channel === "beta" ? " beta" : "") + '</span>' : '<span class="ver">no release</span>') + '</header>' +
     '<div class="tags">' + tags.join("") + '</div><p>' + esc(p.summary) + '</p>' +
     '<dl class="meta"><dt>Updated</dt><dd>' + esc(p.updated || "n/a") + '</dd><dt>Downloads</dt><dd>' + p.downloads.toLocaleString() + '</dd>' +
+    (v && v.tested && v.tested.length ? '<dt>Tested on</dt><dd>' + v.tested.map(function (t) { return esc(t.device + (t.firmware ? " " + t.firmware : "") + (t.date ? " (" + t.date + ")" : "")); }).join(", ") + '</dd>' : (v ? '<dt>Tested on</dt><dd>Not reported</dd>' : '')) +
     (v ? '<dt>Projects</dt><dd>Compat ' + v.param_compat + ' (saved projects break only when this changes)</dd>' : '') + '<dt>Source</dt><dd>' + esc(p.repo) + '</dd></dl>' +
     '<div class="actions">' + (v ? '<a class="btn-l primary" href="' + esc(v.url) + '">Download</a>' : '') +
     '<a class="btn-l" href="https://github.com/' + esc(p.repo) + '">Source</a></div>' + hist + '</article>';
