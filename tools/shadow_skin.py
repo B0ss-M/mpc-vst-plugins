@@ -936,7 +936,7 @@ def build(layout_path, params, skin_dir, art_bin, png_from_ppm):
         for w in titles:
             dr.text((w["x"] + 18 - ox, w["y"] + 8 - oy), w["title"], font=ImageFont.truetype(TITLE_FONT, 26),
                     fill="#" + ACCENT_HI)
-        group_font = ImageFont.truetype(TITLE_FONT, 18)
+        group_font = ImageFont.truetype(TITLE_FONT, 18) if TITLE_FONT else None
         for w in groups:   # enum_h/enum_v's own group label -- see label_cmds()'s title_font branch
             if w["kind"] == "enum_h":
                 gx, gy, color = w["cx"], w["cy"] - 33 // 2 - 22, INK
