@@ -8,105 +8,14 @@
 <link rel="alternate" type="application/atom+xml" title="New releases" href="feed.xml">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Titillium+Web:wght@400;600;700&display=swap">
 <style>
-/* Layout: sticky bar, masthead with a line-drawn MPC (screen, Q-Link encoders, jog wheel, buttons, 16 pads), filters, card grid.
-   One committed look: light studio faceplate. Fonts are the two MPC resolves: Titillium Web (labels, headings) and Roboto (text). */
-:root {
-  --bg: #e9e7e2;
-  --panel: #f7f6f3;
-  --panel-2: #eeede8;
-  --line: #cdcac2;
-  --fg: #1b1c1f;
-  --muted: #64666d;
-  --accent: #d63a30;
-  --accent-fg: #ffffff;
-  --amber: #e0a100;
-  --amber-ink: #7a5600;
-  --lcd-bg: #1b1c1f;
-  --lcd-fg: #f4f4f4;
-  --body-fill: #dedbd4;
-  --display: "Titillium Web", "Arial Narrow", sans-serif;
-  --text: "Roboto", system-ui, sans-serif;
-  --radius: 6px;
-  color-scheme: light;
-}
-* { box-sizing: border-box; }
-body { background: var(--bg); color: var(--fg); font: 400 15px/1.55 var(--text); margin: 0;
-  padding-inline: 16px; padding-block: 0 48px; }
-a { color: inherit; }
-:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.wrap { max-width: 1080px; margin-inline: auto; }
-
-.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg);
-  border-bottom: 1px solid var(--line); margin-inline: -16px; padding: 12px 16px; }
-.brand { font: 700 19px/1 var(--display); letter-spacing: .1em; text-transform: uppercase; display: flex; align-items: center; gap: 10px; }
-.dot { width: 12px; height: 12px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent); }
-
-.mast { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 400px); gap: 24px 48px; align-items: center; padding-block: 36px 24px; }
-.mast h1 { font: 700 clamp(34px, 6vw, 56px)/1 var(--display); text-transform: uppercase; letter-spacing: .02em; margin: 0 0 14px; text-wrap: balance; }
-.mast p { margin: 0; color: var(--muted); max-width: 52ch; }
-.mpc { width: 100%; height: auto; display: block; }
-.mpc .body { fill: var(--body-fill); stroke: var(--line); stroke-width: 1.5; }
-.mpc .screen { fill: var(--lcd-bg); }
-.mpc .ui { fill: none; stroke: var(--lcd-fg); stroke-width: 1.5; opacity: .55; stroke-linecap: round; }
-.mpc .ui-hot { fill: var(--accent); }
-.mpc .knob { fill: var(--panel); stroke: var(--muted); stroke-width: 1.5; }
-.mpc .tick { stroke: var(--fg); stroke-width: 2; stroke-linecap: round; }
-.mpc .wheel { fill: var(--panel); stroke: var(--muted); stroke-width: 1.5; }
-.mpc .wheel-in { fill: var(--panel-2); stroke: var(--line); stroke-width: 1.5; }
-.mpc .btn { fill: var(--panel); stroke: var(--line); stroke-width: 1.2; }
-.mpc .btn.rec { fill: var(--accent); stroke: none; }
-.mpc .pad { fill: var(--lcd-bg); opacity: .82; }
-.mpc .pad.on { fill: var(--accent); opacity: 1; }
-.mpc .pad.alt { fill: var(--amber); opacity: 1; }
-@media (prefers-reduced-motion: no-preference) { .mpc .pulse { animation: pulse 2.4s ease-in-out infinite; } }
-@keyframes pulse { 50% { opacity: .5; } }
-
-.sample { font: 400 12px/1.5 var(--text); color: var(--muted); border: 1px dashed var(--line); border-radius: var(--radius);
-  padding: 8px 12px; margin-bottom: 20px; }
-.tools { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 12px; }
-.tools .search { grid-column: 1 / -1; }
-.tools label { display: flex; flex-direction: column; gap: 4px; font: 600 11px/1 var(--display); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); min-width: 0; }
-.tools input, .tools select { font: 400 14px var(--text); letter-spacing: 0; text-transform: none; color: var(--fg); background: var(--panel);
-  border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 12px; width: 100%; min-width: 0; }
-.status { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between; margin-bottom: 16px; color: var(--muted); font-size: 13px; }
-.status label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
-.linkbtn { font: 600 12px/1 var(--display); letter-spacing: .1em; text-transform: uppercase; color: var(--accent); background: none; border: 0; padding: 6px 0; cursor: pointer; }
-.dir { font: 600 13px/1 var(--display); color: var(--fg); background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 12px; cursor: pointer; }
-.vers { border-top: 1px solid var(--line); padding-top: 10px; font-size: 12px; color: var(--muted); }
-.vers summary { cursor: pointer; font: 600 11px/1.6 var(--display); letter-spacing: .1em; text-transform: uppercase; }
-.vers table { width: 100%; border-collapse: collapse; margin-top: 6px; font-variant-numeric: tabular-nums; }
-.vers td { padding: 4px 8px 4px 0; vertical-align: top; }
-.vers .y { text-decoration: line-through; }
-.stat { font-size: 12px; color: var(--muted); }
-
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 16px; }
-.card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px;
-  display: flex; flex-direction: column; gap: 12px; min-width: 0; }
-.card header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
-.card h2 { font: 700 26px/1.05 var(--display); text-transform: uppercase; letter-spacing: .02em; margin: 0; }
-.by { color: var(--muted); font-size: 13px; margin-top: 2px; }
-.ver { font: 500 13px/1 var(--text); background: var(--lcd-bg); color: var(--lcd-fg); border-radius: 3px; padding: 7px 9px;
-  letter-spacing: .05em; white-space: nowrap; font-variant-numeric: tabular-nums; }
-.card p { margin: 0; flex: 1; }
-.tags { display: flex; gap: 6px; flex-wrap: wrap; }
-.tag { font: 600 11px/1 var(--display); letter-spacing: .1em; text-transform: uppercase; color: var(--muted);
-  border: 1px solid var(--line); border-radius: 3px; padding: 6px 8px; }
-.tag.warn { color: var(--amber-ink); border-color: var(--amber); background: color-mix(in srgb, var(--amber) 14%, var(--panel)); }
-.meta { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font: 400 12px/1.5 var(--text); color: var(--muted);
-  border-top: 1px solid var(--line); padding-top: 12px; margin: 0; }
-.meta dt { font: 600 11px/1.9 var(--display); text-transform: uppercase; letter-spacing: .1em; }
-.meta dd { margin: 0; color: var(--fg); overflow-wrap: anywhere; }
-.actions { display: flex; gap: 8px; }
-.btn-l { font: 600 14px/1 var(--display); letter-spacing: .1em; text-transform: uppercase; text-decoration: none;
-  padding: 11px 15px; border-radius: var(--radius); border: 1px solid var(--line); color: var(--fg); background: var(--panel-2); }
-.btn-l.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
-.empty { color: var(--muted); padding: 24px 0; }
-footer { margin-top: 36px; color: var(--muted); font-size: 12px; border-top: 1px solid var(--line); padding-top: 16px; }
-@media (max-width: 640px) { .mast { grid-template-columns: minmax(0, 1fr); } .mpc { max-width: 380px; } }
+/*SITE_CSS*/
 </style>
 </head>
 <body>
-<div class="bar"><div class="wrap"><div class="brand"><span class="dot"></span>MPC OS Plugin Catalog</div></div></div>
+<div class="bar"><div class="wrap nav">
+  <div class="brand"><span class="dot"></span><a href="index.html">MPC OS Plugin Catalog</a></div>
+  <nav aria-label="Site"><ul>/*NAV*/</ul></nav>
+</div></div></div>
 <main class="wrap">
   <section class="mast">
     <div>
@@ -130,6 +39,8 @@ footer { margin-top: 36px; color: var(--muted); font-size: 12px; border-top: 1px
       <g id="pads"></g>
     </svg>
   </section>
+
+  <div class="pagelist">/*GUIDES*/</div>
 
   <div class="tools">
     <label class="search">Search<input id="q" type="search" placeholder="Name, developer, style or tag"></label>

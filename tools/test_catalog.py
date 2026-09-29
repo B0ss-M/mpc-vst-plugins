@@ -222,5 +222,39 @@ class SiteTest(unittest.TestCase):
         self.assertTrue(catalog_build.check_entry(dict(BuildTest.ENTRY, style="Bad Style")))
 
 
+import catalog_md  # noqa: E402
+
+
+class PagesTest(unittest.TestCase):
+    def test_markdown_subset_and_escaping(self):
+        html = catalog_md.render("# T <b>\n\ntext with `a<b` and **bold** [x](https://e.io/a?b=1&c=2) [bad](javascript:alert(1))\n\n"
+                                 "- one\n  wrapped\n- two\n\n1. a\n2. b\n\n```\n<x> & y\n```\n\n> note\n\n| h1 | h2 |\n|---|---|\n| a | b |\n")
+        self.assertIn('<h1 id="t">T &lt;b&gt;</h1>', html)
+        self.assertIn("<code>a&lt;b</code>", html)
+        self.assertIn("<strong>bold</strong>", html)
+        self.assertIn('<a href="https://e.io/a?b=1&amp;c=2">x</a>', html)
+        self.assertNotIn('href="javascript', html)
+        self.assertIn("<li>one wrapped</li>", html)
+        self.assertIn("<ol><li>a</li><li>b</li></ol>", html)
+        self.assertIn("<pre><code>&lt;x&gt; &amp; y</code></pre>", html)
+        self.assertIn("<blockquote>", html)
+        self.assertIn("<th>h1</th>", html)
+        self.assertNotIn("<b>", html)
+
+    def test_repo_pages_render_with_nav(self):
+        pages = catalog_site.load_pages(os.path.join(HERE, "..", "catalog", "pages"))
+        self.assertGreaterEqual(len(pages), 4)
+        self.assertEqual([p["slug"] for p in pages], ["install", "build", "workflow", "add"])
+        for p in pages:
+            html = catalog_site.render_page(p, pages)
+            self.assertIn('aria-current="page"', html)
+            for marker in ("/*NAV*/", "/*TITLE*/", "/*DESC*/", "/*BODY*/", "/*SITE_CSS*/"):
+                self.assertNotIn(marker, html)
+        idx = catalog_site.render({"schema": 1, "generated": "x", "plugins": []}, pages)
+        for p in pages:
+            self.assertIn('href="%s.html"' % p["slug"], idx)
+        self.assertNotIn("/*NAV*/", idx)
+
+
 if __name__ == "__main__":
     unittest.main()

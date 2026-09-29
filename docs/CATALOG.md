@@ -109,6 +109,8 @@ here first and move to its own repo (recommended, for community ownership) once 
 ### Phase 3: The website
 - [x] `tools/catalog_site.py` generates the site from `catalog.json`; `catalog.yml` deploys with Pages on main (2026-09-29; checked in headless Chromium with sample data, the Pages deploy has not run: needs Settings > Pages > Source: GitHub Actions).
 - [x] List with search, filters (kind, style, developer, license, beta) and sorting (updated, downloads, name, developer, kind), state kept in the URL hash; plugin page with history, install steps, checksum, source link.
+- [x] Guide pages Install, Build, Workflow and Add yours (2026-09-29): Markdown in `catalog/pages/*.md`, rendered by `tools/catalog_site.py`
+      with a shared menu; checked in headless Chromium at desktop and phone width.
 - [x] (2026-09-29, unit-tested; not yet run against real repos) Atom feed `feed.xml`; "Tested on" from optional `tested.json` in the plugin repo; contributor docs in `catalog/README.md`.
 - [ ] Announce to the community; collect what people actually ask for before building Phase 4.
 

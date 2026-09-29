@@ -5,25 +5,62 @@
 
 Writes feed.xml (Atom), index.html (one self-contained page: the catalog is embedded, filtering and sorting run in the browser),
 catalog.json (for installers and other tools) and .nojekyll. Deploy the folder with GitHub Pages.
-Standard library only. Template: tools/catalog_site/index.template.html. See docs/CATALOG.md.
+Guide pages: every catalog/pages/*.md becomes <name>.html (front matter: title, nav, order, summary; Markdown subset in
+tools/catalog_md.py) and joins the menu. Standard library only. Templates and CSS: tools/catalog_site/. See docs/CATALOG.md.
 """
 import argparse
+import glob
 import json
 import os
 import shutil
+import sys
+from html import escape as html_escape
 from xml.sax.saxutils import escape
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
+import catalog_md  # noqa: E402
 
 
-def render(catalog):
-    """The page HTML for a catalog dict. The JSON is embedded in a <script type=application/json>, so '<' is escaped."""
+def read(name):
+    return open(os.path.join(HERE, "catalog_site", name), encoding="utf-8").read()
+
+
+def load_pages(pages_dir):
+    """[{slug, title, nav, order, summary, body}] for catalog/pages/*.md, in menu order."""
+    pages = []
+    for f in sorted(glob.glob(os.path.join(pages_dir, "*.md"))):
+        meta, src = catalog_md.front_matter(open(f, encoding="utf-8").read())
+        name = os.path.splitext(os.path.basename(f))[0]
+        pages.append({"slug": name, "title": meta.get("title", name), "nav": meta.get("nav", meta.get("title", name)),
+                      "order": int(meta.get("order", 50)), "summary": meta.get("summary", ""), "body": src})
+    return sorted(pages, key=lambda p: (p["order"], p["slug"]))
+
+
+def nav_html(pages, current):
+    items = [("index.html", "Catalog", "index")] + [(p["slug"] + ".html", p["nav"], p["slug"]) for p in pages]
+    return "".join('<li><a href="%s"%s>%s</a></li>' % (h, ' aria-current="page"' if k == current else "", html_escape(t)) for h, t, k in items)
+
+
+def render_page(page, pages):
+    """A guide page as full HTML."""
+    body = '<h1>%s</h1>\n<p class="lede">%s</p>\n%s' % (html_escape(page["title"]), catalog_md.inline(page["summary"]), catalog_md.render(page["body"]))
+    tpl = read("page.template.html")
+    for k, v in (("/*NAV*/", nav_html(pages, page["slug"])), ("/*TITLE*/", html_escape(page["title"])),
+                 ("/*DESC*/", html_escape(page["summary"], quote=True)), ("/*SITE_CSS*/", read("site.css")), ("/*BODY*/", body)):
+        tpl = tpl.replace(k, v)
+    return tpl
+
+
+def render(catalog, pages=()):
+    """The catalog page HTML for a catalog dict. The JSON is embedded in a <script type=application/json>, so '<' is escaped."""
     data = json.dumps(catalog, separators=(",", ":"), ensure_ascii=False).replace("<", "\\u003c").replace("\u2028", "\\u2028").replace("\u2029", "\\u2029")
-    tpl = open(os.path.join(HERE, "catalog_site", "index.template.html"), encoding="utf-8").read()
+    tpl = read("index.template.html")
     marker = "/*CATALOG_JSON*/"
     if tpl.count(marker) != 1:
         raise SystemExit("template must contain the marker exactly once")
-    return tpl.replace(marker, data)
+    guides = "".join('<a href="%s.html"><b>%s</b><span>%s</span></a>' % (p["slug"], html_escape(p["nav"]), html_escape(p["summary"])) for p in pages)
+    return tpl.replace("/*GUIDES*/", guides).replace("/*NAV*/", nav_html(list(pages), "index")).replace("/*SITE_CSS*/", read("site.css")).replace(marker, data)
 
 
 def atom(catalog, base=""):
@@ -53,17 +90,21 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--catalog", default="catalog/dist/catalog.json")
     ap.add_argument("--out", default="catalog/dist/site")
+    ap.add_argument("--pages", default="catalog/pages", help="folder of guide pages (Markdown)")
     ap.add_argument("--base-url", default="", help="public site URL, for the feed's self link")
     a = ap.parse_args()
     catalog = json.load(open(a.catalog, encoding="utf-8"))
     if catalog.get("schema") != 1:
         raise SystemExit("unsupported catalog schema %r" % catalog.get("schema"))
     os.makedirs(a.out, exist_ok=True)
-    open(os.path.join(a.out, "index.html"), "w", encoding="utf-8").write(render(catalog))
+    pages = load_pages(a.pages)
+    open(os.path.join(a.out, "index.html"), "w", encoding="utf-8").write(render(catalog, pages))
+    for pg in pages:
+        open(os.path.join(a.out, pg["slug"] + ".html"), "w", encoding="utf-8").write(render_page(pg, pages))
     open(os.path.join(a.out, "feed.xml"), "w", encoding="utf-8").write(atom(catalog, a.base_url))
     shutil.copy(a.catalog, os.path.join(a.out, "catalog.json"))
     open(os.path.join(a.out, ".nojekyll"), "w").close()
-    print("%s (%d plugins)" % (os.path.join(a.out, "index.html"), len(catalog["plugins"])))
+    print("%s (%d plugins, %d guide pages)" % (os.path.join(a.out, "index.html"), len(catalog["plugins"]), len(pages)))
 
 
 if __name__ == "__main__":
