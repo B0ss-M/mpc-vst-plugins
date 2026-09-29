@@ -19,6 +19,8 @@ requirements, CPU result, checksums).
        --entry build/pluginlist-entry.xml --version 1.2.0 --bench build/bench.txt \
        --about "One line about the plugin." [--extra engine:vst/x] -o dist
    ```
+   Add `--repo owner/name --license <SPDX> [--id my-plugin]` to make it listable in the catalog
+   (`docs/CATALOG_SPEC.md`), then check it: `tools/catalog_check.py dist/<zip> --catalog`.
    `--extra SRC:vst/DEST` ships extra runtime files next to the `.so` (an engine bundle, presets).
 7. **Publish**: tag `<port>-vX.Y.Z` in the port's repo and attach the zip:
    `gh release create maze-voice-vst-v1.2.0 dist/Maze-Voice-1.2.0-mpc-armv7.zip --notes-file ...`

@@ -31,7 +31,7 @@ Building on parameter-driven visibility (`IndexedEnabling`, NOTES "Conditional v
       the repo shows a port that needs no adapter.
 
 ## Community catalog
-- [ ] **Online plugin catalog** (registry + auto-discovered releases + static site + optional device installer).
+- [ ] **Online plugin catalog** (Phase 1 in progress) (registry + auto-discovered releases + static site + optional device installer).
       Design and phased roadmap: `docs/CATALOG.md`. Starts with Phase 0 decisions, then a release manifest in
       `tools/release.py`.
 

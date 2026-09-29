@@ -84,14 +84,14 @@ here first and move to its own repo (recommended, for community ownership) once 
 - [ ] Ask early adopters which plugins exist today and which already publish GitHub releases.
 
 ### Phase 1: Make every release self-describing
-- [ ] Portable paths: `wrapper/plugin_dir.h` (`dladdr()` on the plugin's own symbol, `/proc/self/maps` fallback) so
+- [x] Portable paths (2026-09-29, host-tested; **not yet run on a device**): `wrapper/plugin_dir.h` (`dladdr()` on the plugin's own symbol, `/proc/self/maps` fallback) so
       engines locate presets/assets next to the `.so` wherever it was loaded from (`/sdcard`, `/media/*/Synths`, ...).
       `install.sh`/`uninstall.sh`/`gen_vst.py` take the target dir from a variable or detect it. Reconcile with
       Locrian's `plugin-meta` export (need to see the file).
-- [ ] Spec: `docs/CATALOG_SPEC.md` (registry entry, manifest, catalog.json, channels), schema 1, with JSON Schemas.
-- [ ] `tools/release.py` emits `mpc-plugin.json` into the zip; checksums include it. Byte-reproducible output.
-- [ ] `tools/catalog_check.py <zip>`: the validator above, runnable locally by authors before publishing.
-- [ ] Extend `vst-release.yml` to run the validator and print the catalog entry it would produce.
+- [x] Spec: `docs/CATALOG_SPEC.md` (registry entry, manifest, catalog.json, channels), schema 1 (2026-09-29). JSON Schema files still to do.
+- [x] `tools/release.py` emits `mpc-plugin.json` (`--id/--repo/--license/--requires`); checksums include it (2026-09-29).
+- [x] `tools/catalog_check.py <zip>` and `tools/test_catalog.py` (2026-09-29).
+- [x] `vst-release.yml` runs the validator; new inputs `plugin_id`, `license`, `requires` (2026-09-29, workflow not yet run in CI).
 - [ ] Port template repo (`vst.json`, `build.sh`, release workflow, `tested.json` stub, README) so a new plugin is
       catalog-ready from its first commit. Document in `PORTING.md`.
 - [ ] Back-fill: publish catalog-conformant releases for the existing ports (Maze, JV-880, Acid, Euclidier, ...).
