@@ -8,6 +8,8 @@ A playable VST2 instrument for MPC Live/One/X/Key and Force with native touchscr
 
 ConvertWithMoss is the **desktop import reference and optional Java dependency**, not the audio engine. Its `IMultisampleSource` / `IGroup` / `ISampleZone` model carries the mapping. Its readers cover SFZ, SoundFont 2, Kontakt, EXS24, KMP, modern MPC, and individual WAV/AIFF/CAF/FLAC/NCW/OGG files, among many others. Reader support and preservation of a particular feature vary by format; import tests must establish that per source. Pin the exact ConvertWithMoss commit in the importer build. If its LGPLv3 code is linked or redistributed, follow its license obligations and provide the required notices/source access. The plugin itself contains no ConvertWithMoss code or Java runtime.
 
+The format-specific desktop interface and MPC presentation are specified in [FORMAT_UI.md](FORMAT_UI.md). The [interactive design preview](ui/format-import.html) demonstrates the import flow; it does not parse files yet.
+
 ## Two-stage architecture
 
 1. **Desktop importer (Java, outside the VST):** detect one source instrument using ConvertWithMoss; flatten inherited group settings exactly once; extract/decode samples; write mono/stereo little-endian PCM WAV plus a versioned `instrument.json`; validate all ranges and report lost features. Start with SFZ and SoundFont 2, then add Kontakt, EXS24, KMP and MPC XPM fixtures. An individual audio file can form a one-zone instrument, with an explicitly selected root note. The importer can run on macOS, Windows or Linux; conversion need not run on the MPC.
