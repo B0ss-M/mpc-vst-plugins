@@ -350,9 +350,15 @@ class BuildYourselfTest(Base):
             self.assertNotIn(k, v)   # nothing is published: no download, checksum or zip manifest
         self.assertEqual(v["warnings"], [])   # this tag has a LICENSE file
         self.assertEqual([c["id"] for c in p["components"]], ["fw-one", "fw-fx"])
-        self.assertEqual([x["tag"] for x in problems], ["v0.9.0"])
-        self.assertIn("does not exist at this tag", problems[0]["error"])
+        self.assertEqual(problems, [])   # the old tag v0.9.0 without the script is skipped quietly, not reported
         self.assertEqual(json.dumps(e, sort_keys=True), before)   # the registry entry is not mutated
+
+    def test_only_the_newest_tag_missing_the_script_is_reported(self):
+        files = {("acme/fw-synth", "v0.9.0", "release/build.sh"), ("acme/fw-synth", "v0.9.0", "LICENSE")}
+        gh = FakeTags(tags={"acme/fw-synth": ["v0.9.0", "v0.9.1"]}, files=files)   # the newest tag lacks the script
+        cat, problems = catalog_build.build([self.entry()], gh, os.path.join(self.tmp, "c"), set())
+        self.assertEqual([v["version"] for v in cat["plugins"][0]["versions"]], ["0.9.0"])
+        self.assertEqual([(x["tag"], "does not exist at this tag" in x["error"]) for x in problems], [("v0.9.1", True)])
 
     def test_license_file_missing_is_a_warning_on_the_version(self):
         gh = FakeTags(tags={"acme/fw-synth": ["v0.1.0"]}, files={("acme/fw-synth", "v0.1.0", "release/build.sh")})

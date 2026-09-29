@@ -264,11 +264,15 @@ def tag_versions(e, src, yanked, tested, keep, problems):
         problems.append({"id": e["id"], "tag": None, "error": "no vX.Y.Z tag found: tag a release to be listed"})
         return []
     versions = []
-    for key, t in sorted(semver, key=lambda kt: kt[0], reverse=True)[:keep]:
+    ordered = sorted(semver, key=lambda kt: kt[0], reverse=True)[:keep]
+    for i, (key, t) in enumerate(ordered):
         version = ".".join(map(str, key))
         try:
             if not src.file_exists(repo, script, t["name"]):
-                problems.append({"id": e["id"], "tag": t["name"], "error": "build script %s does not exist at this tag" % script})
+                # An old tag from before the script existed can never be fixed (tags are not moved), so it is skipped
+                # quietly; only the newest tag failing is a problem worth an issue.
+                if i == 0:
+                    problems.append({"id": e["id"], "tag": t["name"], "error": "build script %s does not exist at this tag" % script})
                 continue
             date = src.tag_date(repo, t["sha"])
             has_license = any(src.file_exists(repo, n, t["name"]) for n in ("LICENSE", "LICENSE.md", "LICENSE.txt", "COPYING"))

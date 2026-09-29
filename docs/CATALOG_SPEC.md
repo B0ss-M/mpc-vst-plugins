@@ -66,7 +66,7 @@ fields below are additive and `distribution` defaults to `"release"`, so existin
 | `license` | an open SPDX id from the list in `tools/catalog_build.py`; `source_available` is rejected |
 | `requires_user_files` | required, non-empty: `{name, description}` each |
 | `build.command` | required; shown verbatim and must contain `build.script` |
-| `build.script` | required; a path inside the repo (no leading `/`, no `..`); must exist at every listed tag |
+| `build.script` | required; a path inside the repo (no leading `/`, no `..`); a tag without it is not listed |
 | `build.docs_url` | required, `https://`; `{tag}` is replaced by the shown version's tag (`HEAD` if none) |
 | `build.needs` | optional list of strings (tools the build needs) |
 | `components` | optional non-empty list of `{id, name, kind, uid?}`; ids are unique across the whole registry; `uid` is the four characters from `vst.json` |
@@ -75,8 +75,9 @@ fields below are additive and `distribution` defaults to `"release"`, so existin
 `requires_user_files`, `build` and `components` are rejected on a `release` entry.
 
 Versions are the repo's `vX.Y.Z` git tags (a leading `v` is optional; other tags are ignored). A tag is listed only if
-`build.script` exists at it. Builder checks and reports in `problems.json`: repo unreadable, no valid tag, script missing
-at a tag, and (loudly, `LICENCE RISK`) a GitHub release with a `*-mpc-armv7.zip` asset. A tag without a root
+`build.script` exists at it. An older tag without the script is skipped quietly (tags are never moved, so it could not
+be fixed); only the newest tag missing it is reported. Builder checks and reports in `problems.json`: repo unreadable,
+no valid tag, script missing at the newest tag, and (loudly, `LICENCE RISK`) a GitHub release with a `*-mpc-armv7.zip` asset. A tag without a root
 `LICENSE`/`COPYING` file gets a version warning. There is no zip, so no `catalog_check.py`, sha256 or size.
 
 ## `catalog.json` (generated)
