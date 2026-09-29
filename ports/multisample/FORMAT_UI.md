@@ -2,7 +2,7 @@
 
 Two surfaces serve different jobs. The **desktop importer** recognizes a source, exposes its relevant import choices, previews the resulting note/velocity map, and reports unsupported features before writing a bundle. The **MPC VST skin** plays the normalized bundle with stable VST parameter indices; it shows source provenance and contextual information without pretending to recreate another sampler's entire editor.
 
-The first formats are WAV/AIFF/CAF/FLAC/OGG/NCW (single sample), SFZ, SoundFont 2, Kontakt NKI, Logic EXS24, Korg KMP/KSF, and modern MPC XPM. Support is rolled out one format at a time behind fixtures. The GUI may display a format before its importer is ready, but must disable Import with an explicit "planned" status. ConvertWithMoss's documented reader support does not guarantee every proprietary feature, script, effect, or encrypted library is portable.
+The first detailed panels are WAV/AIFF/CAF/FLAC/OGG/NCW (single sample), SFZ, SoundFont 2, Kontakt NKI, Logic EXS24, Korg KMP/KSF, and modern MPC XPM. The preview's searchable catalog also includes **all 62 source families** named in ConvertWithMoss's `README-FORMATS.md`: 55 additional entries in `ui/format-catalog.js` use bank, project, container, or preset panels and link to the corresponding source documentation. These are distinct named workflows built from shared components, rather than 62 duplicated screen implementations. Support is rolled out one format at a time behind fixtures. Every panel is a design preview; Import remains disabled until its reader is connected and validated. ConvertWithMoss's documented reader support does not guarantee every proprietary feature, script, effect, or encrypted library is portable.
 
 ## Desktop import flow
 
@@ -21,7 +21,7 @@ The first formats are WAV/AIFF/CAF/FLAC/OGG/NCW (single sample), SFZ, SoundFont 
 | Korg KMP/KSF | Multisample and referenced KSF file list | Multisample selection, search root | Report missing linked KSF assets and unsupported loop modes. |
 | MPC XPM | Program/track name, keygroups/layers, embedded or linked samples | Program or track selection, sample search root | The importer's interpretation of MPC 2/3 versions must be fixture-tested. |
 
-The browser prototype at `ui/format-import.html` shows these panels and validation states. It is an interactive **visual specification**, not a converter; its buttons do not write files.
+The browser prototype at `ui/format-import.html` shows these panels and validation states. It is an interactive **visual specification**, not a converter; its buttons do not write files. The catalog is a snapshot of upstream documentation and must be reviewed on any ConvertWithMoss version bump. Individual audio extensions share one workflow; container/image entries require an instrument-selection step before they produce a bundle.
 
 ## MPC skin after import
 

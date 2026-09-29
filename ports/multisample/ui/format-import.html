@@ -45,10 +45,10 @@
   <p class="intro">Choose a source format to see its import settings and mapping preview. The eventual importer will detect the format, validate audio, show lost features, and write a portable bundle for the MPC plugin.</p>
   <div class="grid">
     <section class="panel stack" aria-labelledby="source-title">
-      <div><h2 id="source-title">1 · Source</h2><label for="format">Detected format</label><select id="format"></select><p class="hint">This selector simulates detection. The working importer will start from a file or folder.</p></div>
+      <div><h2 id="source-title">1 · Source</h2><label for="search">Find a format</label><input id="search" type="search" placeholder="Search 62 format families" autocomplete="off"><label for="format" style="margin-top:12px">Detected format</label><select id="format"></select><p class="hint">This selector simulates detection. The working importer will start from a file or folder.</p></div>
       <div><label for="source-path">File or folder</label><input id="source-path" type="text" readonly value="Choose a file when the importer is implemented" aria-describedby="path-hint"><p class="hint" id="path-hint">The prototype does not read files.</p></div>
       <div id="choices" aria-live="polite"></div>
-      <div class="notice" id="format-note"></div>
+      <div class="notice" id="format-note"></div><a id="format-docs" href="#" target="_blank" rel="noopener noreferrer" style="color:#a9e8d0;font-size:.82rem">Source format documentation ↗</a>
     </section>
     <section class="panel" aria-labelledby="preview-title">
       <h2 id="preview-title">2 · Mapping preview</h2><p class="hint" id="summary"></p>
@@ -61,6 +61,7 @@
     </section>
   </div>
 </main>
+<script src="format-catalog.js"></script>
 <script>
   const formats = {
     audio: { name:'Single sample · WAV / AIFF / CAF / FLAC / NCW / OGG', summary:'Create a one-zone instrument from an audio file.', fields:[['Root note','C3'],['Key range','C1–C7'],['Playback','One-shot / gated']], note:'Choose a root note explicitly when the file has none. Embedded loop metadata is shown when available.', caution:'Root pitch and loop points must be confirmed before import.' },
@@ -71,11 +72,33 @@
     kmp: { name:'Korg KMP / KSF', summary:'Inspect a multisample and its linked KSF files.', fields:[['Multisample','Select KMP'],['KSF search root','Choose folder'],['Loop mode','Review conversion']], note:'Every referenced KSF is validated before the bundle is written.', caution:'Missing linked KSF audio blocks import.' },
     xpm: { name:'MPC program / track · XPM', summary:'Choose a program or track and review keygroups/layers.', fields:[['Content','Program or track'],['Sample search root','Choose folder'],['Firmware version','Detected subtype']], note:'XPM variants need version-specific fixtures. The preview shows the actual layer map.', caution:'MPC 2 and MPC 3 variants must be checked against fixtures.' }
   };
-  const select=document.getElementById('format');
-  for(const [id,item] of Object.entries(formats)) select.add(new Option(item.name,id));
-  select.value='sfz';
+  const profiles={
+    bank:{ fields:[['Bank or library','Choose bank'],['Preset or instrument','Choose preset'],['Sample search root','Choose folder']], summary:'Choose a bank and preset, then inspect its key and velocity layers.' },
+    project:{ fields:[['Project or preset','Choose source'],['Track or program','Choose track'],['Sample search root','Choose folder']], summary:'Choose a project part or program and inspect its zones.' },
+    container:{ fields:[['Disk image or volume','Choose source'],['Instrument or program','Choose entry'],['Extraction destination','Choose folder']], summary:'Inspect a disk/container and choose an instrument to extract.' },
+    preset:{ fields:[['Instrument or patch','Choose instrument'],['Sample search root','Choose folder'],['Unsupported features','Show report']], summary:'Inspect a preset and its linked audio before conversion.' }
+  };
+  for(const [index,entry] of window.additionalSourceFormats.entries()){
+    const id='extra-'+index, profile=profiles[entry.profile];
+    formats[id]={ name:entry.name, summary:profile.summary, fields:profile.fields,
+      note:`${entry.name}: ${entry.sourceOnly?'ConvertWithMoss reads this source but does not write it.':'ConvertWithMoss lists this as a source format.'} This panel is a planned importer profile.`,
+      caution:`${entry.name} needs its own success and failure fixtures. Unsupported source features must be reported.`,
+      docs:entry.docs };
+  }
+  const select=document.getElementById('format'), search=document.getElementById('search');
+  function fillOptions(query=''){
+    const selected=select.value;
+    select.replaceChildren();
+    for(const [id,item] of Object.entries(formats)) if(item.name.toLocaleLowerCase().includes(query.toLocaleLowerCase())) select.add(new Option(item.name,id));
+    if([...select.options].some(option=>option.value===selected)) select.value=selected;
+    else if(select.options.length) select.selectedIndex=0;
+    render();
+  }
+  search.addEventListener('input',()=>fillOptions(search.value.trim()));
+  fillOptions(); select.value='sfz';
   function render(){
     const f=formats[select.value];
+    if(!f){ document.getElementById('summary').textContent='No matching format. Try another search.'; return; }
     document.getElementById('summary').textContent=f.summary;
     document.getElementById('choices').replaceChildren(...f.fields.map(([label,value],i)=>{
       const box=document.createElement('div'); box.style.marginBottom='14px';
@@ -84,6 +107,7 @@
       box.append(l,input); return box;
     }));
     document.getElementById('format-note').textContent=f.note;
+    const docs=document.getElementById('format-docs'); docs.hidden=!f.docs; if(f.docs) docs.href=f.docs;
     document.getElementById('validation').textContent=f.caution;
     const single=select.value==='audio';
     document.getElementById('zones').textContent=single?'1':'—';
