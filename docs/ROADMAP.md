@@ -30,6 +30,11 @@ Building on parameter-driven visibility (`IndexedEnabling`, NOTES "Conditional v
 - [ ] **A reference port on `engine.h` + `params.json`** (e.g. `poc/synth.c` turned into a full example), so
       the repo shows a port that needs no adapter.
 
+## Community catalog
+- [ ] **Online plugin catalog** (registry + auto-discovered releases + static site + optional device installer).
+      Design and phased roadmap: `docs/CATALOG.md`. Starts with Phase 0 decisions, then a release manifest in
+      `tools/release.py`.
+
 ## Verification
 - [ ] **Stock, unmodded MPC and other models:** the ALSA MIDI-out port (`poc/midiport.c`) without MockbaMod,
       and `tools/probe_device.sh` after firmware updates. Needs the hardware.
