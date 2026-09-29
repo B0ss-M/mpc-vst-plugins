@@ -112,8 +112,9 @@ footer { margin-top: 36px; color: var(--muted); font-size: 12px; border-top: 1px
       <h1>Plugins for MPC OS, in one place</h1>
       <p>Community-built VST2 instruments and effects for Akai MPC and Force standalone units. Every plugin links to its source, its license and a checksummed release zip.</p>
     </div>
-    <svg class="mpc" viewBox="0 0 560 334" role="img" aria-label="Line drawing of an MPC: screen with four Q-Link encoders and buttons beneath it, a jog wheel below, and sixteen pads on the right">
+    <svg class="mpc" viewBox="0 0 560 334" role="img" aria-label="Line drawing of an MPC: screen with four Q-Link encoders and buttons beneath it, a jog wheel below, and sixteen pads on the left">
       <rect class="body" x="4" y="4" width="552" height="326" rx="18"/>
+      <g transform="translate(268 0)">
       <rect class="screen" x="26" y="26" width="240" height="96" rx="6"/>
       <path class="ui" d="M42 44h90M42 60h140M42 74h110M42 88h160"/>
       <rect class="ui-hot" x="42" y="100" width="52" height="14" rx="3"/>
@@ -124,6 +125,7 @@ footer { margin-top: 36px; color: var(--muted); font-size: 12px; border-top: 1px
       <circle class="wheel-in" cx="146" cy="268" r="28"/>
       <line class="tick" x1="146" y1="245" x2="146" y2="253"/>
       <g id="sbtns"></g>
+      </g>
       <g id="pads"></g>
     </svg>
   </section>
@@ -257,7 +259,7 @@ put("fbtns", h);
 h = ""; for (j = 0; j < 3; j++) { h += '<rect class="btn' + (j === 2 ? " rec" : "") + '" x="26" y="' + (240 + j * 24) + '" width="40" height="18" rx="3"/><rect class="btn" x="226" y="' + (240 + j * 24) + '" width="40" height="18" rx="3"/>'; }
 put("sbtns", h);
 var lit = { 1: "on", 2: "on", 6: "alt", 9: "on", 11: "on pulse", 14: "alt" };
-h = ""; for (i = 0; i < 16; i++) { var r = Math.floor(i / 4), c = i % 4; h += '<rect class="pad ' + (lit[i] || "") + '" x="' + (290 + c * 63) + '" y="' + (26 + r * 71) + '" width="57" height="65" rx="5"/>'; }
+h = ""; for (i = 0; i < 16; i++) { var r = Math.floor(i / 4), c = i % 4; h += '<rect class="pad ' + (lit[i] || "") + '" x="' + (26 + c * 63) + '" y="' + (26 + r * 71) + '" width="57" height="65" rx="5"/>'; }
 put("pads", h);
 </script>
 </body>
