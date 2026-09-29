@@ -102,6 +102,22 @@ class CatalogTest(Base):
         e, _, _ = catalog_check.check(z2, catalog=True)
         self.assertTrue(any("license" in x for x in e))
 
+    def test_symlinks_inside_package_ok_outside_rejected(self):
+        z = self.build()
+        def add(target):
+            out = z + "." + str(abs(hash(target))) + ".zip"
+            with zipfile.ZipFile(z) as zin, zipfile.ZipFile(out, "w") as zout:
+                for i in zin.infolist():
+                    zout.writestr(i, zin.read(i.filename))
+                top = zin.namelist()[0].split("/")[0]
+                i = zipfile.ZipInfo(top + "/payload/vst/d1/l"); i.external_attr = 0o120777 << 16
+                zout.writestr(i, target)
+            return out
+        e, _, _ = catalog_check.check(add("../d2/x"), catalog=True)
+        self.assertFalse(any("symlink" in x for x in e))
+        e, _, _ = catalog_check.check(add("../../../../etc/passwd"), catalog=True)
+        self.assertTrue(any("symlink" in x for x in e))
+
     def test_id_mismatch_with_registry(self):
         e, _, _ = catalog_check.check(self.build(), expect_id="other")
         self.assertTrue(any("registry id" in x for x in e))
