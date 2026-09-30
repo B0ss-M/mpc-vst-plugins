@@ -118,6 +118,10 @@ What's next is in [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ---
 
+## Inspect third-party Linux plugins
+
+Run `python3 tools/inspect_plugin.py /path/to/plugins --json report.json` for static architecture, format, dependency and runtime-version checks. See [docs/PLUGIN_INSPECTION.md](docs/PLUGIN_INSPECTION.md) for target library/GLIBC checks and the remaining porting gates. This inspector does not execute or convert the binaries.
+
 ## Agent quick start
 
 Start with [AGENTS.md](AGENTS.md) and [docs/AGENT_WORKFLOW.md](docs/AGENT_WORKFLOW.md). Generate a working instrument scaffold with `python3 tools/new_port.py ports/my-synth --name "My Synth" --vendor "My Vendor" --uid MyS1`. Reusable briefs, status checkpoints and source-provenance templates live in `templates/plugin/`. The starter uses this repo’s wrapper and tools; device verification is still required.
