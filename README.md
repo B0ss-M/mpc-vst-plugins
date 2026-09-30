@@ -118,6 +118,10 @@ What's next is in [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ---
 
+## Agent quick start
+
+Start with [AGENTS.md](AGENTS.md) and [docs/AGENT_WORKFLOW.md](docs/AGENT_WORKFLOW.md). Generate a working instrument scaffold with `python3 tools/new_port.py ports/my-synth --name "My Synth" --vendor "My Vendor" --uid MyS1`. Reusable briefs, status checkpoints and source-provenance templates live in `templates/plugin/`. The starter uses this repo’s wrapper and tools; device verification is still required.
+
 ## Technical details
 
 ### Documentation

@@ -1,0 +1,21 @@
+name: Agent starter smoke test
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  starter:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install preview import dependency
+        run: python -m pip install pillow
+      - name: Generate and host-test the starter
+        run: |
+          python3 tools/new_port.py "$RUNNER_TEMP/mpc-starter" --name "CI Starter" --vendor "CI" --uid CiS1
+          bash tools/test_port.sh "$RUNNER_TEMP/mpc-starter/vst.json"

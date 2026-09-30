@@ -15,6 +15,9 @@
   non-blocking, use `posix_spawn` with LD_PRELOAD stripped (never `fork()`), and use libcurl for HTTPS.
 
 ## Quick start (block-rendering engine)
+
+For a fresh instrument, use `python3 tools/new_port.py ports/my-synth --name "My Synth" --vendor "My Vendor" --uid MyS1`. See [AGENT_WORKFLOW.md](AGENT_WORKFLOW.md) for the workflow and task templates. The starter is a test sine instrument; implement and validate the intended DSP before calling it a finished plugin.
+
 Add a `vst.json` next to the engine (format in `tools/gen_vst.py`'s docstring; example:
 `mpc-vst-maze/vst/vst.json`), then run `tools/build_port.sh path/to/vst.json`. That builds the skin from
 `layout` (or from an auto-layout when there's none, which is a good first pass), `params.h`, the `.so` (linked with
