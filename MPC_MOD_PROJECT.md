@@ -82,6 +82,8 @@ Defer strace, debugger attachment and core-dump configuration until a specific f
 
 [QUADWEAVE design template](docs/QUADWEAVE_DESIGN.md), added 2026-10-01: a four-track rhythm/arp/melody/chord MIDI generator inspired by Plinky 12 Toadstep and Xfer Cthulhu. Includes explicit polyrhythm/polymeter clocks, harmonic conductor, six-page MPC UI, four-knob mappings and staged acceptance gates. Working name; design only, no plugin build or device verification yet.
 
+Design v0.2 adds core MIDI File mode: browser/audition, polyphonic SMF playback, live input-note transposition, source/target key and scale mapping, per-lane output channel remapping, and embedded clip persistence. See section 14 of QUADWEAVE_DESIGN.md. This remains specification only.
+
 Next plugin gate: test one ALSA port with four output channels and simultaneous destination playback/recording on the Live 2; test separate ports if needed. Access discovery below remains a prerequisite for on-device work.
 
 ## Current checkpoint
