@@ -78,6 +78,12 @@ Defer strace, debugger attachment and core-dump configuration until a specific f
 - Firmware flashing, boot changes and system-library replacement require a separate explicit scope and recovery plan.
 - Record model, firmware, date, commands and outcomes. Publish hardware claims only after actual verification.
 
+## Active plugin design
+
+[QUADWEAVE design template](docs/QUADWEAVE_DESIGN.md), added 2026-10-01: a four-track rhythm/arp/melody/chord MIDI generator inspired by Plinky 12 Toadstep and Xfer Cthulhu. Includes explicit polyrhythm/polymeter clocks, harmonic conductor, six-page MPC UI, four-knob mappings and staged acceptance gates. Working name; design only, no plugin build or device verification yet.
+
+Next plugin gate: test one ALSA port with four output channels and simultaneous destination playback/recording on the Live 2; test separate ports if needed. Access discovery below remains a prerequisite for on-device work.
+
 ## Current checkpoint
 
 Completed:
