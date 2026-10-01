@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MPC Multisample · Import design preview</title>
+  <style>
+    :root { color-scheme: dark; font: 15px/1.5 system-ui, sans-serif; background:#10151a; color:#eaf1f3; }
+    * { box-sizing:border-box } body { margin:0; } button,select,input { font:inherit }
+    .shell { max-width:1180px; margin:auto; padding:28px 24px 60px }
+    header { display:flex; justify-content:space-between; align-items:center; gap:20px; border-bottom:1px solid #314047; padding-bottom:20px }
+    h1 { font-size:1.55rem; margin:0; letter-spacing:.01em } h2 { font-size:1.12rem; margin:0 0 13px } h3 { font-size:.96rem; margin:0 0 9px }
+    .eyebrow { text-transform:uppercase; letter-spacing:.19em; color:#85d6c3; font-weight:700; font-size:.68rem; margin:0 0 5px }
+    .badge { border:1px solid #668075; border-radius:999px; padding:5px 11px; color:#bde9d9; font-size:.78rem; white-space:nowrap }
+    .intro { color:#aebec4; margin:19px 0 24px; max-width:75ch }
+    .grid { display:grid; grid-template-columns:minmax(270px,370px) minmax(0,1fr); gap:18px }
+    .panel { background:#192229; border:1px solid #34434b; border-radius:15px; padding:22px; box-shadow:0 12px 35px #0002 }
+    .stack { display:grid; gap:17px } label { display:block; font-size:.85rem; color:#c7d4d9; font-weight:650; margin:0 0 7px }
+    select,input { width:100%; background:#11191f; border:1px solid #52636b; border-radius:8px; color:#f3f7f8; padding:10px 11px; min-height:44px }
+    select:focus,input:focus,button:focus-visible { outline:2px solid #7ce0bd; outline-offset:2px }
+    .hint { font-size:.78rem; color:#94aab2; margin:6px 0 0 }
+    .choice { display:flex; align-items:center; gap:10px; margin:9px 0; font-size:.9rem; color:#dce8eb }
+    .choice input { width:18px; height:18px; min-height:0; accent-color:#70d3a9 }
+    .notice { background:#24312d; border-left:3px solid #8ad7a0; border-radius:5px; padding:11px 13px; color:#d5e9dc; font-size:.85rem }
+    .warning { background:#352a22; border-left:3px solid #e4aa61; color:#f7ddbd }
+    .metrics { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:16px 0 }
+    .metric { background:#111b20; border:1px solid #33454c; border-radius:8px; padding:10px }
+    .metric b { display:block; font-size:1.35rem } .metric span { color:#9eb3bb; font-size:.73rem }
+    .map { display:grid; grid-template-columns:36px 1fr; gap:4px 9px; margin-top:14px; align-items:center }
+    .axis { color:#9fb0b7; font-size:.72rem; text-align:right }
+    .lane { height:31px; border:1px solid #3b4f55; border-radius:6px; position:relative; background:repeating-linear-gradient(90deg,#1e292d,#1e292d calc(12.5% - 1px),#36464b 12.5%) }
+    .zone { position:absolute; top:4px; bottom:4px; border-radius:4px; padding:2px 7px; background:#377b70; color:#f4fffd; overflow:hidden; white-space:nowrap; font-size:.72rem }
+    .zone.alt { background:#6d6596 } .zone.gold { background:#9b7042 }
+    .keys { display:flex; justify-content:space-between; margin-left:45px; color:#9fb0b7; font-size:.72rem }
+    .actions { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-top:18px; border-top:1px solid #34434b; padding-top:16px }
+    .actions small { color:#94aab2 } button { border:0; border-radius:9px; padding:10px 17px; background:#78d4ac; color:#10251d; font-weight:800; cursor:pointer }
+    button[disabled] { background:#465458; color:#aab8bc; cursor:not-allowed }
+    .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0 }
+    @media(max-width:760px) { .grid { grid-template-columns:1fr } header { align-items:flex-start; flex-direction:column } .metrics { grid-template-columns:repeat(3,1fr) } }
+  </style>
+</head>
+<body>
+<main class="shell">
+  <header><div><p class="eyebrow">MPC Multisample</p><h1>Import an instrument</h1></div><span class="badge">Design preview · no files are converted</span></header>
+  <p class="intro">Choose a source format to see its import settings and mapping preview. The eventual importer will detect the format, validate audio, show lost features, and write a portable bundle for the MPC plugin.</p>
+  <div class="grid">
+    <section class="panel stack" aria-labelledby="source-title">
+      <div><h2 id="source-title">1 · Source</h2><label for="search">Find a format</label><input id="search" type="search" placeholder="Search 62 format families" autocomplete="off"><label for="format" style="margin-top:12px">Detected format</label><select id="format"></select><p class="hint">This selector simulates detection. The working importer will start from a file or folder.</p></div>
+      <div><label for="source-path">File or folder</label><input id="source-path" type="text" readonly value="Choose a file when the importer is implemented" aria-describedby="path-hint"><p class="hint" id="path-hint">The prototype does not read files.</p></div>
+      <div id="choices" aria-live="polite"></div>
+      <div class="notice" id="format-note"></div><a id="format-docs" href="#" target="_blank" rel="noopener noreferrer" style="color:#a9e8d0;font-size:.82rem">Source format documentation ↗</a>
+    </section>
+    <section class="panel" aria-labelledby="preview-title">
+      <h2 id="preview-title">2 · Mapping preview</h2><p class="hint" id="summary"></p>
+      <div class="metrics"><div class="metric"><b id="zones">—</b><span>zones</span></div><div class="metric"><b id="samples">—</b><span>samples</span></div><div class="metric"><b id="layers">—</b><span>velocity layers</span></div></div>
+      <h3>Keys × velocity</h3><div class="map" aria-label="Illustrative key and velocity zones"><span class="axis">High</span><div class="lane"><span class="zone" style="left:18%;width:34%">Layer A</span><span class="zone alt" style="left:52%;width:31%">Layer B</span></div><span class="axis">Mid</span><div class="lane"><span class="zone alt" style="left:18%;width:34%">Layer C</span><span class="zone gold" style="left:52%;width:31%">Layer D</span></div><span class="axis">Low</span><div class="lane"><span class="zone gold" style="left:18%;width:65%">Soft layer</span></div></div>
+      <div class="keys"><span>C1</span><span>C3</span><span>C5</span><span>C7</span></div>
+      <p class="hint">Illustrative map. The working view will draw actual ranges and open a zone inspector on selection.</p>
+      <div class="notice warning" id="validation" style="margin-top:22px"></div>
+      <div class="actions"><small>Import stays unavailable until a reader and validation are connected.</small><button type="button" disabled title="Design preview only">Import bundle</button></div>
+    </section>
+  </div>
+</main>
+<script src="format-catalog.js"></script>
+<script>
+  const formats = {
+    audio: { name:'Single sample · WAV / AIFF / CAF / FLAC / NCW / OGG', summary:'Create a one-zone instrument from an audio file.', fields:[['Root note','C3'],['Key range','C1–C7'],['Playback','One-shot / gated']], note:'Choose a root note explicitly when the file has none. Embedded loop metadata is shown when available.', caution:'Root pitch and loop points must be confirmed before import.' },
+    sfz: { name:'SFZ', summary:'Review regions, referenced samples and supported opcodes.', fields:[['Instrument name','From SFZ header'],['Sample search root','Beside the SFZ'],['Unsupported opcodes','Show all']], note:'Relative sample paths are resolved within the selected library. Unsupported opcodes are listed before import.', caution:'SFZ scripts or unsupported opcodes will not run in the MPC engine.' },
+    sf2: { name:'SoundFont 2 · SF2', summary:'Choose one preset from a bank and inspect its velocity layers.', fields:[['Bank','0 · Presets'],['Preset','Select preset'],['Stereo pairing','Review mismatches']], note:'Global and instrument generators are flattened into each zone once; linked stereo samples are checked.', caution:'A bank can contain many presets. Select one or a named batch before import.' },
+    nki: { name:'Kontakt · NKI', summary:'Inspect instrument groups, samples and scripts.', fields:[['Instrument','Select instrument'],['Sample search root','Choose folder'],['Scripts and effects','Show compatibility report']], note:'The importer extracts supported zone/audio settings; the playback engine does not run Kontakt scripts.', caution:'Protected or encrypted libraries and KSP behavior may not transfer.' },
+    exs: { name:'Logic EXS24', summary:'Inspect EXS groups, zones and linked audio.', fields:[['Instrument','Select instrument'],['Sample search root','Choose folder'],['Modulation','Show compatibility report']], note:'Group and zone settings are displayed with a mapping preview before bundling.', caution:'Unsupported modulation and routing must be reported.' },
+    kmp: { name:'Korg KMP / KSF', summary:'Inspect a multisample and its linked KSF files.', fields:[['Multisample','Select KMP'],['KSF search root','Choose folder'],['Loop mode','Review conversion']], note:'Every referenced KSF is validated before the bundle is written.', caution:'Missing linked KSF audio blocks import.' },
+    xpm: { name:'MPC program / track · XPM', summary:'Choose a program or track and review keygroups/layers.', fields:[['Content','Program or track'],['Sample search root','Choose folder'],['Firmware version','Detected subtype']], note:'XPM variants need version-specific fixtures. The preview shows the actual layer map.', caution:'MPC 2 and MPC 3 variants must be checked against fixtures.' }
+  };
+  const profiles={
+    bank:{ fields:[['Bank or library','Choose bank'],['Preset or instrument','Choose preset'],['Sample search root','Choose folder']], summary:'Choose a bank and preset, then inspect its key and velocity layers.' },
+    project:{ fields:[['Project or preset','Choose source'],['Track or program','Choose track'],['Sample search root','Choose folder']], summary:'Choose a project part or program and inspect its zones.' },
+    container:{ fields:[['Disk image or volume','Choose source'],['Instrument or program','Choose entry'],['Extraction destination','Choose folder']], summary:'Inspect a disk/container and choose an instrument to extract.' },
+    preset:{ fields:[['Instrument or patch','Choose instrument'],['Sample search root','Choose folder'],['Unsupported features','Show report']], summary:'Inspect a preset and its linked audio before conversion.' }
+  };
+  for(const [index,entry] of window.additionalSourceFormats.entries()){
+    const id='extra-'+index, profile=profiles[entry.profile];
+    formats[id]={ name:entry.name, summary:profile.summary, fields:profile.fields,
+      note:`${entry.name}: ${entry.sourceOnly?'ConvertWithMoss reads this source but does not write it.':'ConvertWithMoss lists this as a source format.'} This panel is a planned importer profile.`,
+      caution:`${entry.name} needs its own success and failure fixtures. Unsupported source features must be reported.`,
+      docs:entry.docs };
+  }
+  const select=document.getElementById('format'), search=document.getElementById('search');
+  function fillOptions(query=''){
+    const selected=select.value;
+    select.replaceChildren();
+    for(const [id,item] of Object.entries(formats)) if(item.name.toLocaleLowerCase().includes(query.toLocaleLowerCase())) select.add(new Option(item.name,id));
+    if([...select.options].some(option=>option.value===selected)) select.value=selected;
+    else if(select.options.length) select.selectedIndex=0;
+    render();
+  }
+  search.addEventListener('input',()=>fillOptions(search.value.trim()));
+  fillOptions(); select.value='sfz';
+  function render(){
+    const f=formats[select.value];
+    if(!f){ document.getElementById('summary').textContent='No matching format. Try another search.'; return; }
+    document.getElementById('summary').textContent=f.summary;
+    document.getElementById('choices').replaceChildren(...f.fields.map(([label,value],i)=>{
+      const box=document.createElement('div'); box.style.marginBottom='14px';
+      const l=document.createElement('label'); l.htmlFor='field-'+i; l.textContent=label;
+      const input=document.createElement('input'); input.id='field-'+i; input.value=value; input.readOnly=true;
+      box.append(l,input); return box;
+    }));
+    document.getElementById('format-note').textContent=f.note;
+    const docs=document.getElementById('format-docs'); docs.hidden=!f.docs; if(f.docs) docs.href=f.docs;
+    document.getElementById('validation').textContent=f.caution;
+    const single=select.value==='audio';
+    document.getElementById('zones').textContent=single?'1':'—';
+    document.getElementById('samples').textContent=single?'1':'—';
+    document.getElementById('layers').textContent=single?'1':'—';
+  }
+  select.addEventListener('change',render); render();
+</script>
+</body>
+</html>

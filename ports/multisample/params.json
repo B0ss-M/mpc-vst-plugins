@@ -1,0 +1,38 @@
+{
+  "name": "MPC Multisample",
+  "params": [
+    { "key": "bank", "name": "Bank", "min": 0, "max": 127, "default": 0, "display": "int" },
+    { "key": "program", "name": "Program", "min": 0, "max": 127, "default": 0, "display": "int" },
+    { "key": "level", "name": "Level", "min": -60, "max": 12, "default": 0, "unit": "dB" },
+    { "key": "pan", "name": "Pan", "min": -100, "max": 100, "default": 0, "display": "int" },
+    { "key": "transpose", "name": "Transpose", "min": -24, "max": 24, "default": 0, "display": "int", "unit": "st" },
+    { "key": "fine", "name": "Fine Tune", "min": -100, "max": 100, "default": 0, "display": "int", "unit": "ct" },
+    { "key": "velocity_curve", "name": "Velocity Curve", "options": ["Soft", "Linear", "Hard"], "default": "Linear" },
+    { "key": "polyphony", "name": "Polyphony", "options": ["8", "16", "24", "32"], "default": "16" },
+    { "key": "bend_range", "name": "Pitch Bend", "min": 0, "max": 24, "default": 2, "display": "int", "unit": "st" },
+    { "key": "attack", "name": "Attack Offset", "min": -100, "max": 100, "default": 0, "display": "int" },
+    { "key": "release", "name": "Release Offset", "min": -100, "max": 100, "default": 0, "display": "int" },
+    { "key": "cutoff", "name": "Filter Cutoff", "min": 20, "max": 20000, "default": 20000, "unit": "Hz" },
+    { "key": "resonance", "name": "Resonance", "min": 0, "max": 100, "default": 0, "display": "int" },
+    { "key": "pedal", "name": "Sustain Pedal", "options": ["Off", "On"], "default": "Off" },
+    { "key": "rr_reset", "name": "Reset Rotation", "min": 0, "max": 1, "default": 0, "momentary": true },
+    { "key": "panic", "name": "All Notes Off", "min": 0, "max": 1, "default": 0, "momentary": true },
+    { "key": "hold", "name": "Hold Offset", "min": -100, "max": 100, "default": 0, "display": "int" },
+    { "key": "decay", "name": "Decay Offset", "min": -100, "max": 100, "default": 0, "display": "int" },
+    { "key": "sustain", "name": "Sustain Offset", "min": -100, "max": 100, "default": 0, "display": "int" },
+    { "key": "filter_enable", "name": "Filter", "options": ["Off", "On"], "default": "On" },
+    { "key": "filter_keytrack", "name": "Filter Keytrack", "min": -100, "max": 100, "default": 0, "display": "int" },
+    { "key": "vel_amp", "name": "Velocity to Amp", "min": 0, "max": 100, "default": 100, "display": "int" },
+    { "key": "vel_filter", "name": "Velocity to Filter", "min": 0, "max": 100, "default": 0, "display": "int" },
+    { "key": "start_offset", "name": "Start Offset", "min": 0, "max": 100, "default": 0, "display": "int" },
+    { "key": "loop_enable", "name": "Loop", "options": ["Off", "On"], "default": "On" },
+    { "key": "program_name", "name": "Instrument", "min": 0, "max": 0, "default": 0, "display": "string", "type": "readout" },
+    { "key": "load_status", "name": "Load Status", "min": 0, "max": 0, "default": 0, "display": "string", "type": "readout" },
+    { "key": "zone_count", "name": "Zones", "min": 0, "max": 0, "default": 0, "display": "string", "type": "readout" }
+  ],
+  "sections": [
+    { "label": "Play", "keys": ["bank", "program", "level", "pan", "transpose", "fine", "velocity_curve", "polyphony", "bend_range", "attack", "release", "cutoff", "resonance", "pedal", "rr_reset", "panic"] },
+    { "label": "Shape", "keys": ["hold", "decay", "sustain", "filter_enable", "filter_keytrack", "vel_amp", "vel_filter", "start_offset", "loop_enable"] },
+    { "label": "Status", "keys": ["program_name", "load_status", "zone_count"] }
+  ]
+}
