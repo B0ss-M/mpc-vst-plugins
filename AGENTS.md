@@ -2,6 +2,8 @@
 
 This repository is the shared MPC OS VST2 porting kit. Read this file before editing.
 
+For MPC-MOD community modification and Live 2 diagnostics tasks, also read [MPC_MOD_PROJECT.md](MPC_MOD_PROJECT.md) and update its checkpoint when work progresses.
+
 ## Start with the relevant sources
 
 - `docs/AGENT_WORKFLOW.md`: short task workflow and verification gates.
