@@ -1,11 +1,11 @@
 # QUADWEAVE — four-track rhythm, arp, melody and chord generator
 
-Design template v0.1 • 2026-10-01 • MPC-MOD
+Design template v0.2 • 2026-10-01 • MPC-MOD
 Working name only; not an implemented or hardware-verified plugin.
 
 ## 1. Product brief
 
-A four-track MIDI composition and performance plugin for MPC Live 2, targeting firmware 3.9.1 and ARM32 Linux VST2. One instance generates four coordinated musical parts, each routed to its own MPC instrument or MIDI destination. Every track can be Rhythm, Arp, Melody or Chord; the track names below are starting roles, not restrictions.
+A four-track MIDI composition and performance plugin for MPC Live 2, targeting firmware 3.9.1 and ARM32 Linux VST2. One instance generates four coordinated musical parts, each routed to its own MPC instrument or MIDI destination. Every track can be Rhythm, Arp, Melody, Chord or MIDI File; the track names below are starting roles, not restrictions.
 
 The musical objective: create a coherent four-part phrase quickly, then vary its rhythm, register and articulation without losing its harmonic identity.
 
@@ -51,7 +51,7 @@ The existing poc/midiport.c is a routing reference, not production code: it has 
 ## 4. Common track engine
 
 Each track contains:
-- Mode: Rhythm / Arp / Melody / Chord.
+- Mode: Rhythm / Arp / Melody / Chord / MIDI File.
 - Source: live held notes / latched notes / chord slot / shared progression / local progression.
 - Pattern A–H; 1–16 stages in v1, with data format room for later extension.
 - Independent clock, pattern length, direction, reset policy and output assignment.
@@ -78,6 +78,7 @@ Generation order:
 | Arp | Select notes by position from the current ordered chord pool | Order, index mask, octave range, traversal, retrigger |
 | Melody | Play editable scale-degree steps or generate a bounded motif | Degree, contour, range, chord-tone bias, maximum leap |
 | Chord | Play a chord from a slot or progression, with controlled voicing | Degree/slot, quality, inversion, spread, strum |
+| MIDI File | Play a polyphonic MIDI clip with input-controlled transposition and key/scale mapping | File, source part, source/target key, transform, trigger, output channel |
 
 Arp orders: Up, Down, Up/Down, Played, Random and Custom. Custom stages can select one or multiple of eight note indices. Missing indices wrap modulo the current note count; an empty note pool is silent. Tied/repeated notes have explicit retrigger rules.
 
@@ -175,6 +176,8 @@ Use repository-supported buttons, option segments, faders/knobs, text and static
 | Scenes | Scene A–H and pending launch | Four pattern assignments plus global progression assignment | Launch quantisation, chain, undo |
 | Setup | Output status and instance name | Channels/ports, input filter, reset/latch settings | Panic, save slot, later MIDI export |
 
+Add Browser and Clip as nested pages under Notes; keep six top-level tabs.
+
 Six short tab names: Play, Rhythm, Notes, Chords, Scenes, Setup. Use nested pages for depth and keep subpage labels short. The reference kit's Force canvas must not be assumed to match Live 2 geometry: capture the actual plugin viewport, preview every state and validate touch targets on device before freezing pixel dimensions.
 
 Main interaction: select a track, select a stage, then edit four prominent controls. Physical pads remain note/slot triggers by default. Optional Pad Edit mode can select stages only after received note mappings are verified; do not assume direct pad LED or dedicated-button control.
@@ -246,7 +249,7 @@ Alternate patch: use B with 5 stages and C with 7 stages, both at fixed 1/16 Ste
 | 5 | Performance features | Scenes, Euclidean masks, constrained mutation, locks/undo |
 | 6 | Release gate | ARM binary checks, device CPU/jitter measurements, routing/play/record stress test |
 
-MVP includes gates 0–4 with basic patterns and manual harmony. More advanced generation, chaining, MIDI import/export, CC lanes and MPE are deferred.
+MVP includes gates 0–4 with basic patterns, manual harmony and the MIDI File browser/playback requirements in section 14. Add a file-player gate after transport/note lifecycle and before final skin validation. Advanced generation, chaining, MIDI export, CC lanes and MPE remain deferred; MIDI import/playback is now core scope.
 
 Required tests:
 - 5:7 over one bar produces the correct event counts and rational timestamps; no drift across many cycles.
@@ -267,3 +270,124 @@ DESIGN ONLY. No source implementation, compiled skin, ARM build or device test i
 Next implementation action: create the minimum one-port/four-channel routing experiment following the repository rules, then verify it on the user's Live 2 before implementing the full interface. Record exact community-mod revision and destination monitoring/recording behaviour.
 
 Before release, reserve a unique four-character VST UID after checking existing ports; do not treat the working name as a final product identity.
+
+
+## 14. Smart MIDI browser and file-player mode
+
+Added 2026-10-01 at the user's request. This section extends the core design; it does not indicate an implemented browser.
+
+### User workflow
+
+Browse -> audition -> assign to A/B/C/D -> choose source key/scale -> set target key/scale -> choose input behaviour -> choose output channel -> play/record.
+
+Each track can hold a different MIDI clip. A multitrack file can instead assign up to four selected source parts to A/B/C/D. Preview is MIDI sent to a selected destination instrument, so the browser itself makes no sound.
+
+### Browser template
+
+- Scan configured user folders for .mid and .midi files in a background worker.
+- Paginated file/folder list, folder Up, Previous/Next, Refresh, Favourite, Preview, Load and Stop Preview.
+- Show filename, source track/channel list, note count, duration in beats/bars, time signature, pitch range, polyphony, tempo metadata and key metadata.
+- Bar count requires a known meter; show beats if meter is missing or ambiguous.
+- Filter by folder, favourites, length, estimated role (bass/chord/melody/drums) and source key. Estimated roles and keys carry confidence labels.
+- Filename tags and declared key-signature events are clues, not proof. Analyse pitch-class distribution and duration as an optional suggestion; show alternative keys or Unknown for ambiguous material. Never silently commit an uncertain source key.
+- No native file-dialog API or touchscreen text entry is assumed. Use fixed result slots with live text and buttons; filename text search may be added in a companion editor later.
+- Preview uses a dedicated destination or temporarily suspends only the selected generator track. Never accidentally layer preview over its old clip. Stop Preview releases its notes and restores the prior track state.
+
+### Loading contract
+
+Initial scope: Standard MIDI File format 0 and format 1 using PPQ timing, including polyphonic notes, note-on velocity zero as note-off, tempo/time-signature/key metadata and sustain CC64. Parse valid running status and track boundaries. Format 2 and SMPTE timing produce a clear Unsupported message in v1 rather than incorrect playback.
+
+Source selection distinguishes SMF track from MIDI channel: one file track can contain several channels. Show both. Let the user select one part or intentionally merge selected parts. Do not silently collapse a full arrangement onto one output channel. Assigning more than four parts requires an explicit selection.
+
+Default event policy: notes and sustain; program/bank changes, SysEx, pitch bend and other controllers are filtered and reported. This prevents an audition from changing the destination preset. Bend-dependent performances may sound different; show a warning when filtered events exist. Broader controller support is a later explicit option.
+
+Preserve original tick positions, durations, velocities and polyphonic simultaneity in an immutable source clip. Do not reduce MIDI File playback to the 16-stage editor or apply generator ratchets by default. Transform non-destructively; Reset restores the source.
+
+Keep parsing, indexing and allocation outside the audio callback. Initial resource caps: 8 MiB/file, 100,000 parsed events/file, 64 file tracks and 32 simultaneous notes per loaded lane, with a bounded total of 128 active notes across four file lanes. These are design limits to benchmark, not measured capacity. Reject over-limit clips with a message rather than truncate them silently. The eight-note generated-chord limit elsewhere does not cap MIDI File clips.
+
+Validate chunk sizes, variable-length values, cumulative tick overflow, event lengths and missing releases. Report any offered repair; do not silently invent a different performance. A failed load leaves the existing clip intact.
+
+### Three distinct pitch transforms
+
+| Transform | Behaviour | Use |
+|---|---|---|
+| Transpose | Shift every note by one signed semitone offset | Preserve all intervals and chord qualities |
+| Fit Scale | Apply root shift, then snap out-of-scale notes to the nearest allowed target pitch | Fast adaptation, potentially changes intervals/voicings |
+| Degree Map | Map source scale degree and octave to the corresponding target scale degree | Convert major/minor/modal phrases predictably |
+
+Controls: Source Root, Source Scale, Target Root, Target Scale, Transform, Semitone Offset, Octave, Range and Chromatic Policy. Each lane can Follow Global Key or use a local target.
+
+Degree Map v1 requires equal-sized source and target scales. Support major, natural/harmonic/melodic minor (ascending collection), seven church modes, major/minor pentatonic and chromatic; incompatible cardinalities require Fit Scale or a different scale selection. For source non-scale notes, default Chromatic Policy is Snap to Source Scale, then map; optional Preserve Alteration may produce target non-scale tones and must disable a strict-scale guarantee.
+
+Fit Scale uses deterministic nearest-pitch selection, ties downward. Preserve onset/duration, but show changed-note and pitch-collision counts. Scale fitting does not guarantee the original chord quality. Offer audition and immediate undo; never claim this is automatic harmonic correction. Optional chord-aware revoicing remains a later feature.
+
+Drum mode bypasses every pitch transform unless the user explicitly enables Drum Transpose. Channel 10 is a useful clue, not a definitive instrument classification.
+
+Examples using MIDI note numbers:
+- Source C major [60,64,67] -> D Transpose = [62,66,69], retaining a major triad.
+- Source C major [60,64,67] -> D natural minor Degree Map = [62,65,69], producing D minor.
+- Trigger anchor 60, incoming 64, Transpose mode = +4 semitones relative to the configured base target.
+
+### Live input behaviour
+
+Choose one input role per lane/control zone:
+- Transpose Root: an incoming note selects the target root; it is consumed as a control note.
+- Trigger Clip: starts/retriggers the selected clip, optionally with transposition.
+- Chord Follow: reserved for later chord-aware mapping; ordinary file playback must not imply automatic chord recognition.
+
+Input filter: channel and note range. One root controller per lane in v1; last-note priority, with a held-note stack that returns to the prior held note on release. Latch retains the final selection; unlatched returns to the configured base target. Root-follow can be shared across all four lanes.
+
+Anchor is an explicit MIDI note, default 60. In Transpose mode, total shift = configured base semitone shift + input-note minus anchor + octave offset. In Degree Map/Fit Scale, the input offset moves the target tonic; do not apply that shift twice. Root-only option folds input to pitch class; full-note option follows its octave as well.
+
+Trigger modes: Gate (while held), Latch (continues after release) and One Shot (one clip pass). Loop is separately selectable; One Shot disables Loop. Retrigger choice: restart or continue current phase. Default launch/change quantisation: next beat; options immediate, next bar or next loop.
+
+For key/input changes, default behaviour applies the new mapping to new attacks while existing notes finish at their original mapped pitch. Optional Cut at Boundary releases old voices before applying the new key; use this for strict no-overlap harmony changes. Never recalculate a note-off using the newly selected key.
+
+### Timing and routing
+
+- Host Sync is the v1 clock source. Convert source PPQ to rational quarter-note positions; preserve relative event timing.
+- File tempo is displayed but does not change MPC tempo. Tempo changes embedded in a file are ignored for host-synced beat timing and flagged in the UI.
+- Playback speed: half / normal / double; scale onset and duration equally.
+- Loop start/end stored in beats; retain leading silence by default with an explicit Trim Start option.
+- Clip launch is quantised without blocking playback or loading in the callback.
+- At loop end, default Cut Tails releases notes and sustain before restarting; tail carry is deferred.
+- Seek starts from the new position without chasing pre-seek note-ons in v1; restore relevant sustain state before subsequent notes and label this behaviour.
+- Every lane has output channel 1–16 independent of file/input channels. Rewrite supported channel messages consistently, including note-offs and CC64.
+- Default A/B/C/D channels are 1/2/3/4. If destinations share a port/channel, show a collision warning: sustain and note ownership are channel-wide at the receiver. Recommend unique routes.
+- Flush notes on the old destination before changing output channel/port; then resume on the new route.
+- ALSA routing feasibility remains subject to the Live 2 gate in section 3.
+
+Track each source note instance through its actual emitted destination pitch/channel. Pair overlapping same-pitch source notes consistently in source event order. When scale fitting maps different pitches to one output note, use explicit ownership/reference counts so one release cannot prematurely stop another voice. Define coalescing/retrigger policy, expose collisions and test it with sustain. Queue limits must preserve releases.
+
+### Clip controls and Q-Links
+
+Notes > Browser: result list, source-part selector, Preview, Load to A/B/C/D, favourites and metadata.
+Notes > Clip: loaded file, loop/trigger state, source and target key/scale, transform, output channel and timing.
+Keep existing top-level tabs; use short nested names Browser and Clip.
+
+| Bank | Knob 1 | Knob 2 | Knob 3 | Knob 4 |
+|---|---|---|---|---|
+| Browse | Result index | Source part | Preview velocity scale | Load destination |
+| Pitch | Target root | Target scale | Octave | Transform |
+| Play | Speed | Loop start | Loop end | Launch quantisation |
+| Route | Input channel | Anchor note | Output channel | Input mode |
+
+Load and Preview remain explicit buttons, not side effects of turning Browse. Source key/scale use selectors on the Clip page. Persistent per-lane controls get stable parameter identities; browser cursors and load actions are not automatable in v1.
+
+### Persistence and acceptance
+
+Store each loaded, normalised clip's musical event data in versioned project chunk state, subject to aggregate memory limits, plus source filename/hash, source-part selection and transformations. This keeps project recall working when removable media is absent. External paths alone are insufficient. Browser caches/favourites remain local; no user's MIDI collection is committed to git.
+
+Required tests before shipping:
+1. Format 0/1, different PPQ values, running status, polyphonic chords and sustain.
+2. Exact major-to-minor degree mapping examples and interval-preserving transposition.
+3. Key metadata conflicts, ambiguous estimated keys and explicit user override.
+4. Input-root changes during held notes; every release uses the originally emitted pitch.
+5. Scale collisions, repeated same-pitch events and sustain without stuck or prematurely cut notes.
+6. Independent file/input/output channels, including output changes mid-phrase.
+7. Loop/stop/seek/retrigger, tempo changes and host time-signature changes.
+8. Preview stop/replace, failed loads and disconnected media.
+9. Malformed/oversized files produce bounded errors while audio playback remains responsive.
+10. Save/reload restores the actual clip and transformation without requiring its original path.
+
+Current status: specification only. First implementation slice after routing is one-file, one-lane PPQ playback with channel remap and correct note lifecycle; then live transpose, scale mapping, browser and four-lane operation.
