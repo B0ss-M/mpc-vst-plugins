@@ -1,4 +1,4 @@
-name: QUADWEAVE host verification
+name: QUADWEAVE verification and ARM32 test build
 on:
   pull_request:
     paths: ['ports/quadweave/**', 'wrapper/vst2_abi.h', '.github/workflows/quadweave.yml']
@@ -20,3 +20,39 @@ jobs:
       - run: ports/quadweave/test.sh
       - run: ports/quadweave/build.sh --host
       - run: python3 tools/studio.py preview 'ports/quadweave/build/skin/MPC-MOD - VST - QUADWEAVE/Plugin Skins' -o ports/quadweave/build/page_%d.png
+  arm32:
+    needs: host
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm
+      - name: Build ARMv7 hard-float plugin
+        run: ports/quadweave/build.sh
+      - name: Inspect binary and package test build
+        shell: bash
+        run: |
+          set -euo pipefail
+          P=ports/quadweave
+          mkdir -p "$P/build/quadweave-midi" dist
+          printf '%s\n' '{"progression":{"rootNote":60,"chords":[{"notes":[60,64,67]},{"notes":[62,65,69]},{"notes":[57,60,64]},{"notes":[55,59,62]}]}}' > "$P/build/quadweave-midi/First-Test.progression"
+          file "$P/build/quadweave.so" | tee "$P/build/arm32-report.txt"
+          readelf -h -A -d -V "$P/build/quadweave.so" >> "$P/build/arm32-report.txt"
+          docker image inspect quadweave-arm32:gcc12 --format '{{.Id}}' >> "$P/build/arm32-report.txt"
+          python3 tools/release.py --so "$P/build/quadweave.so" \
+            --skin "$P/build/skin/MPC-MOD - VST - QUADWEAVE" \
+            --entry "$P/build/pluginlist-entry.xml" \
+            --version "0.1.0-test.${{ github.run_number }}" \
+            --about "Experimental ARM32 four-track MIDI player. Host tests passed; MPC Live 2 playback, routing and timing require device testing." \
+            --requires "Community-modded ARM32 MPC with root access and ALSA sequencer; save your project before installing." -o dist
+          cp "$P/build/arm32-report.txt" dist/
+          cp "$P/README.md" dist/QUADWEAVE-README.md
+          cp -a "$P/build/quadweave-midi" dist/Sample-Files
+      - uses: actions/upload-artifact@v4
+        with:
+          name: QUADWEAVE-ARM32-test
+          path: dist/
+          if-no-files-found: error
+          retention-days: 30

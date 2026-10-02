@@ -1,6 +1,6 @@
 # QUADWEAVE — polyrhythmic MIDI player
 
-An initial implementation for the MPC-MOD four-track musical tool. **Host-tested source, not a device-verified release.** This port uses a MIDI-specific VST2 wrapper and the repository's shared ABI, parameter generator, skin renderer and Q-Link mapping. Do not build it through the DSP-only `tools/build_port.sh`; use the commands below.
+An initial implementation for the MPC-MOD four-track musical tool. **ARM32 test build available; not a device-verified release.** This port uses a MIDI-specific VST2 wrapper and the repository's shared ABI, parameter generator, skin renderer and Q-Link mapping. Do not build it through the DSP-only `tools/build_port.sh`; use the commands below.
 
 ## Implemented
 
@@ -41,7 +41,7 @@ For the intended **ARM32** build from an Intel Mac with Docker and ARMv7 emulati
 ports/quadweave/build.sh
 ```
 
-The ARM script builds `quadweave-arm32:gcc12` from `arm32v7/gcc:12`, installs build dependencies in that image, builds the native skin and links `quadweave.so` against ALSA. It prints the ELF header, entry-point symbol and required glibc versions. ARM compilation was not run in the authoring environment because Docker/cross-GCC were unavailable. The image tag is not a pinned digest; record the resolved image before publishing reproducible releases.
+The ARM script builds `quadweave-arm32:gcc12` from `arm32v7/debian:bookworm-slim` with GCC 12, installs build dependencies in that image, builds the native skin and links `quadweave.so` against ALSA. It prints the ELF header, entry-point symbol and required glibc versions. ARM compilation passed in GitHub Actions run 36995026226 on 2026-10-02. The binary is ELF32 ARMv7 hard-float, exports only VSTPluginMain and requires GLIBC through 2.34 and GLIBCXX through 3.4.29. The image tag is not a pinned digest; record the resolved image before publishing reproducible releases.
 
 Output: `ports/quadweave/build/quadweave.so`, `skin/`, `params.h`, `pluginlist-entry.xml`. **`quadweave-host.so` is x86-64 and must not be installed on MPC.**
 
@@ -69,7 +69,7 @@ Mute/output-route/direction/loop changes release notes and restart the affected 
 
 ## Explicit limits / remaining work
 
-- No ARM or MPC hardware pass yet. Force routing evidence does not prove Live 2 compatibility. No installer, restart or firmware modification was performed.
+- ARM build/inspection passed; no MPC hardware pass yet. Force routing evidence does not prove Live 2 compatibility. No installer, restart or firmware modification was performed.
 - This implementation covers file/progression playback. The broader design's Euclidean/stage editor, generated arp/melody engine, scenes, favourites, search, automatic key estimation, MIDI export and chord-aware revoicing are not implemented here.
 - Unsupported MIDI format 2 and SMPTE files fail clearly. Malformed files and unmatched releases fail rather than silently repair.
 - Caps: 8 MiB MIDI, 100,000 parsed MIDI events, 64 source tracks, 32 simultaneous notes per lane, 1 MiB progression JSON, 128 chord slots, 4,096 folder entries. Symbolic links are omitted. Partial loads leave the previous clip intact.
