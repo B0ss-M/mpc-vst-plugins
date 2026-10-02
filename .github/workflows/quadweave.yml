@@ -44,12 +44,12 @@ jobs:
           python3 tools/release.py --so "$P/build/quadweave.so" \
             --skin "$P/build/skin/MPC-MOD - VST - QUADWEAVE" \
             --entry "$P/build/pluginlist-entry.xml" \
-            --extra "$P/build/quadweave-midi:vst/quadweave-midi" \
             --version "0.1.0-test.${{ github.run_number }}" \
             --about "Experimental ARM32 four-track MIDI player. Host tests passed; MPC Live 2 playback, routing and timing require device testing." \
             --requires "Community-modded ARM32 MPC with root access and ALSA sequencer; save your project before installing." -o dist
           cp "$P/build/arm32-report.txt" dist/
           cp "$P/README.md" dist/QUADWEAVE-README.md
+          cp -a "$P/build/quadweave-midi" dist/Sample-Files
       - uses: actions/upload-artifact@v4
         with:
           name: QUADWEAVE-ARM32-test
