@@ -1,7 +1,7 @@
 # QUADWEAVE — four-track rhythm, arp, melody and chord generator
 
 Design template v0.2 • 2026-10-01 • MPC-MOD
-Working name only; not an implemented or hardware-verified plugin.
+Working name. Implementation checkpoint (2026-10-02): `../ports/quadweave/` implements the MIDI/progression playback and browser subset. See its README/STATUS; the broader specification below is not all implemented. No hardware verification yet.
 
 ## 1. Product brief
 
@@ -391,3 +391,8 @@ Required tests before shipping:
 10. Save/reload restores the actual clip and transformation without requiring its original path.
 
 Current status: specification only. First implementation slice after routing is one-file, one-lane PPQ playback with channel remap and correct note lifecycle; then live transpose, scale mapping, browser and four-lane operation.
+
+
+## 15. Rhythmic file-player implementation checkpoint
+
+Added host-tested source under `ports/quadweave/`: four independent host-beat players with straight speed divisions and ratios including 3:2, 4:3, 5:4 and 7:4; Forward, Reverse and Ping-pong directions; MIDI and JSON `.progression` browsing/loading; key/scale/input transpose and output-channel remapping. Progression chords receive an explicit chosen duration at load, since the supported schema supplies notes without performance timing. The implementation README describes limits and unimplemented design items. ARM and Live 2 tests remain open.

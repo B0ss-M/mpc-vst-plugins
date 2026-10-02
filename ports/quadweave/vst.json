@@ -1,0 +1,26 @@
+{
+  "name": "QUADWEAVE",
+  "vendor": "MPC-MOD",
+  "uid": "QdW1",
+  "version": 100,
+  "so": "quadweave.so",
+  "params": "params.json",
+  "layout": "layout.conf",
+  "build": {
+    "root": ".",
+    "sources": [
+      "src/midi.cpp",
+      "src/progression.cpp",
+      "src/player.cpp",
+      "src/plugin.cpp"
+    ],
+    "cflags": [
+      "-std=c++17"
+    ],
+    "libs": [
+      "-lasound",
+      "-lpthread",
+      "-ldl"
+    ]
+  }
+}

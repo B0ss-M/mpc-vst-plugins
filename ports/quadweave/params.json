@@ -1,0 +1,892 @@
+{
+  "name": "QUADWEAVE",
+  "params": [
+    {
+      "key": "t0_enabled",
+      "name": "Run",
+      "options": [
+        "Off",
+        "On"
+      ],
+      "default": 1
+    },
+    {
+      "key": "t0_speed",
+      "name": "Speed",
+      "options": [
+        "1/4x",
+        "1/2x",
+        "3/4x",
+        "1x",
+        "3/2x",
+        "2x",
+        "3x",
+        "4x",
+        "4:3",
+        "5:4",
+        "7:4",
+        "2:3",
+        "4:5",
+        "4:7"
+      ],
+      "default": 3
+    },
+    {
+      "key": "t0_direction",
+      "name": "Direction",
+      "options": [
+        "Forward",
+        "Reverse",
+        "Ping Pong"
+      ]
+    },
+    {
+      "key": "t0_channel",
+      "name": "Output Ch",
+      "min": 1,
+      "max": 16,
+      "default": 1,
+      "display": "int"
+    },
+    {
+      "key": "t0_shift",
+      "name": "Semitones",
+      "min": -48,
+      "max": 48,
+      "default": 0,
+      "display": "int"
+    },
+    {
+      "key": "t0_source",
+      "name": "Source Key",
+      "options": [
+        "C",
+        "Db",
+        "D",
+        "Eb",
+        "E",
+        "F",
+        "Gb",
+        "G",
+        "Ab",
+        "A",
+        "Bb",
+        "B"
+      ]
+    },
+    {
+      "key": "t0_target",
+      "name": "Target Key",
+      "options": [
+        "C",
+        "Db",
+        "D",
+        "Eb",
+        "E",
+        "F",
+        "Gb",
+        "G",
+        "Ab",
+        "A",
+        "Bb",
+        "B"
+      ]
+    },
+    {
+      "key": "t0_source_scale",
+      "name": "Source Scale",
+      "options": [
+        "Major",
+        "Minor",
+        "Dorian",
+        "Mixolyd",
+        "Maj Pent",
+        "Min Pent",
+        "Chromatic"
+      ]
+    },
+    {
+      "key": "t0_target_scale",
+      "name": "Target Scale",
+      "options": [
+        "Major",
+        "Minor",
+        "Dorian",
+        "Mixolyd",
+        "Maj Pent",
+        "Min Pent",
+        "Chromatic"
+      ]
+    },
+    {
+      "key": "t0_transform",
+      "name": "Mapping",
+      "options": [
+        "Transpose",
+        "Fit Scale",
+        "Degree Map"
+      ]
+    },
+    {
+      "key": "t0_follow",
+      "name": "Input Root",
+      "options": [
+        "Off",
+        "On"
+      ]
+    },
+    {
+      "key": "t0_anchor",
+      "name": "Anchor Note",
+      "min": 0,
+      "max": 127,
+      "default": 60,
+      "display": "int"
+    },
+    {
+      "key": "t0_input",
+      "name": "Input Ch",
+      "min": 0,
+      "max": 16,
+      "default": 0,
+      "display": "int"
+    },
+    {
+      "key": "t0_latch",
+      "name": "Latch Root",
+      "options": [
+        "Off",
+        "On"
+      ],
+      "default": 1
+    },
+    {
+      "key": "t0_loop",
+      "name": "Loop",
+      "options": [
+        "One Shot",
+        "Loop"
+      ],
+      "default": 1
+    },
+    {
+      "key": "t1_enabled",
+      "name": "Run",
+      "options": [
+        "Off",
+        "On"
+      ],
+      "default": 1
+    },
+    {
+      "key": "t1_speed",
+      "name": "Speed",
+      "options": [
+        "1/4x",
+        "1/2x",
+        "3/4x",
+        "1x",
+        "3/2x",
+        "2x",
+        "3x",
+        "4x",
+        "4:3",
+        "5:4",
+        "7:4",
+        "2:3",
+        "4:5",
+        "4:7"
+      ],
+      "default": 3
+    },
+    {
+      "key": "t1_direction",
+      "name": "Direction",
+      "options": [
+        "Forward",
+        "Reverse",
+        "Ping Pong"
+      ]
+    },
+    {
+      "key": "t1_channel",
+      "name": "Output Ch",
+      "min": 1,
+      "max": 16,
+      "default": 2,
+      "display": "int"
+    },
+    {
+      "key": "t1_shift",
+      "name": "Semitones",
+      "min": -48,
+      "max": 48,
+      "default": 0,
+      "display": "int"
+    },
+    {
+      "key": "t1_source",
+      "name": "Source Key",
+      "options": [
+        "C",
+        "Db",
+        "D",
+        "Eb",
+        "E",
+        "F",
+        "Gb",
+        "G",
+        "Ab",
+        "A",
+        "Bb",
+        "B"
+      ]
+    },
+    {
+      "key": "t1_target",
+      "name": "Target Key",
+      "options": [
+        "C",
+        "Db",
+        "D",
+        "Eb",
+        "E",
+        "F",
+        "Gb",
+        "G",
+        "Ab",
+        "A",
+        "Bb",
+        "B"
+      ]
+    },
+    {
+      "key": "t1_source_scale",
+      "name": "Source Scale",
+      "options": [
+        "Major",
+        "Minor",
+        "Dorian",
+        "Mixolyd",
+        "Maj Pent",
+        "Min Pent",
+        "Chromatic"
+      ]
+    },
+    {
+      "key": "t1_target_scale",
+      "name": "Target Scale",
+      "options": [
+        "Major",
+        "Minor",
+        "Dorian",
+        "Mixolyd",
+        "Maj Pent",
+        "Min Pent",
+        "Chromatic"
+      ]
+    },
+    {
+      "key": "t1_transform",
+      "name": "Mapping",
+      "options": [
+        "Transpose",
+        "Fit Scale",
+        "Degree Map"
+      ]
+    },
+    {
+      "key": "t1_follow",
+      "name": "Input Root",
+      "options": [
+        "Off",
+        "On"
+      ]
+    },
+    {
+      "key": "t1_anchor",
+      "name": "Anchor Note",
+      "min": 0,
+      "max": 127,
+      "default": 60,
+      "display": "int"
+    },
+    {
+      "key": "t1_input",
+      "name": "Input Ch",
+      "min": 0,
+      "max": 16,
+      "default": 0,
+      "display": "int"
+    },
+    {
+      "key": "t1_latch",
+      "name": "Latch Root",
+      "options": [
+        "Off",
+        "On"
+      ],
+      "default": 1
+    },
+    {
+      "key": "t1_loop",
+      "name": "Loop",
+      "options": [
+        "One Shot",
+        "Loop"
+      ],
+      "default": 1
+    },
+    {
+      "key": "t2_enabled",
+      "name": "Run",
+      "options": [
+        "Off",
+        "On"
+      ],
+      "default": 1
+    },
+    {
+      "key": "t2_speed",
+      "name": "Speed",
+      "options": [
+        "1/4x",
+        "1/2x",
+        "3/4x",
+        "1x",
+        "3/2x",
+        "2x",
+        "3x",
+        "4x",
+        "4:3",
+        "5:4",
+        "7:4",
+        "2:3",
+        "4:5",
+        "4:7"
+      ],
+      "default": 3
+    },
+    {
+      "key": "t2_direction",
+      "name": "Direction",
+      "options": [
+        "Forward",
+        "Reverse",
+        "Ping Pong"
+      ]
+    },
+    {
+      "key": "t2_channel",
+      "name": "Output Ch",
+      "min": 1,
+      "max": 16,
+      "default": 3,
+      "display": "int"
+    },
+    {
+      "key": "t2_shift",
+      "name": "Semitones",
+      "min": -48,
+      "max": 48,
+      "default": 0,
+      "display": "int"
+    },
+    {
+      "key": "t2_source",
+      "name": "Source Key",
+      "options": [
+        "C",
+        "Db",
+        "D",
+        "Eb",
+        "E",
+        "F",
+        "Gb",
+        "G",
+        "Ab",
+        "A",
+        "Bb",
+        "B"
+      ]
+    },
+    {
+      "key": "t2_target",
+      "name": "Target Key",
+      "options": [
+        "C",
+        "Db",
+        "D",
+        "Eb",
+        "E",
+        "F",
+        "Gb",
+        "G",
+        "Ab",
+        "A",
+        "Bb",
+        "B"
+      ]
+    },
+    {
+      "key": "t2_source_scale",
+      "name": "Source Scale",
+      "options": [
+        "Major",
+        "Minor",
+        "Dorian",
+        "Mixolyd",
+        "Maj Pent",
+        "Min Pent",
+        "Chromatic"
+      ]
+    },
+    {
+      "key": "t2_target_scale",
+      "name": "Target Scale",
+      "options": [
+        "Major",
+        "Minor",
+        "Dorian",
+        "Mixolyd",
+        "Maj Pent",
+        "Min Pent",
+        "Chromatic"
+      ]
+    },
+    {
+      "key": "t2_transform",
+      "name": "Mapping",
+      "options": [
+        "Transpose",
+        "Fit Scale",
+        "Degree Map"
+      ]
+    },
+    {
+      "key": "t2_follow",
+      "name": "Input Root",
+      "options": [
+        "Off",
+        "On"
+      ]
+    },
+    {
+      "key": "t2_anchor",
+      "name": "Anchor Note",
+      "min": 0,
+      "max": 127,
+      "default": 60,
+      "display": "int"
+    },
+    {
+      "key": "t2_input",
+      "name": "Input Ch",
+      "min": 0,
+      "max": 16,
+      "default": 0,
+      "display": "int"
+    },
+    {
+      "key": "t2_latch",
+      "name": "Latch Root",
+      "options": [
+        "Off",
+        "On"
+      ],
+      "default": 1
+    },
+    {
+      "key": "t2_loop",
+      "name": "Loop",
+      "options": [
+        "One Shot",
+        "Loop"
+      ],
+      "default": 1
+    },
+    {
+      "key": "t3_enabled",
+      "name": "Run",
+      "options": [
+        "Off",
+        "On"
+      ],
+      "default": 1
+    },
+    {
+      "key": "t3_speed",
+      "name": "Speed",
+      "options": [
+        "1/4x",
+        "1/2x",
+        "3/4x",
+        "1x",
+        "3/2x",
+        "2x",
+        "3x",
+        "4x",
+        "4:3",
+        "5:4",
+        "7:4",
+        "2:3",
+        "4:5",
+        "4:7"
+      ],
+      "default": 3
+    },
+    {
+      "key": "t3_direction",
+      "name": "Direction",
+      "options": [
+        "Forward",
+        "Reverse",
+        "Ping Pong"
+      ]
+    },
+    {
+      "key": "t3_channel",
+      "name": "Output Ch",
+      "min": 1,
+      "max": 16,
+      "default": 4,
+      "display": "int"
+    },
+    {
+      "key": "t3_shift",
+      "name": "Semitones",
+      "min": -48,
+      "max": 48,
+      "default": 0,
+      "display": "int"
+    },
+    {
+      "key": "t3_source",
+      "name": "Source Key",
+      "options": [
+        "C",
+        "Db",
+        "D",
+        "Eb",
+        "E",
+        "F",
+        "Gb",
+        "G",
+        "Ab",
+        "A",
+        "Bb",
+        "B"
+      ]
+    },
+    {
+      "key": "t3_target",
+      "name": "Target Key",
+      "options": [
+        "C",
+        "Db",
+        "D",
+        "Eb",
+        "E",
+        "F",
+        "Gb",
+        "G",
+        "Ab",
+        "A",
+        "Bb",
+        "B"
+      ]
+    },
+    {
+      "key": "t3_source_scale",
+      "name": "Source Scale",
+      "options": [
+        "Major",
+        "Minor",
+        "Dorian",
+        "Mixolyd",
+        "Maj Pent",
+        "Min Pent",
+        "Chromatic"
+      ]
+    },
+    {
+      "key": "t3_target_scale",
+      "name": "Target Scale",
+      "options": [
+        "Major",
+        "Minor",
+        "Dorian",
+        "Mixolyd",
+        "Maj Pent",
+        "Min Pent",
+        "Chromatic"
+      ]
+    },
+    {
+      "key": "t3_transform",
+      "name": "Mapping",
+      "options": [
+        "Transpose",
+        "Fit Scale",
+        "Degree Map"
+      ]
+    },
+    {
+      "key": "t3_follow",
+      "name": "Input Root",
+      "options": [
+        "Off",
+        "On"
+      ]
+    },
+    {
+      "key": "t3_anchor",
+      "name": "Anchor Note",
+      "min": 0,
+      "max": 127,
+      "default": 60,
+      "display": "int"
+    },
+    {
+      "key": "t3_input",
+      "name": "Input Ch",
+      "min": 0,
+      "max": 16,
+      "default": 0,
+      "display": "int"
+    },
+    {
+      "key": "t3_latch",
+      "name": "Latch Root",
+      "options": [
+        "Off",
+        "On"
+      ],
+      "default": 1
+    },
+    {
+      "key": "t3_loop",
+      "name": "Loop",
+      "options": [
+        "One Shot",
+        "Loop"
+      ],
+      "default": 1
+    },
+    {
+      "key": "selected",
+      "name": "File Index",
+      "min": 0,
+      "max": 4095,
+      "display": "int"
+    },
+    {
+      "key": "destination",
+      "name": "Load Track",
+      "options": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ]
+    },
+    {
+      "key": "part",
+      "name": "File Track",
+      "min": 0,
+      "max": 64,
+      "display": "int"
+    },
+    {
+      "key": "file_channel",
+      "name": "File Ch",
+      "min": 0,
+      "max": 16,
+      "display": "int"
+    },
+    {
+      "key": "chord_step",
+      "name": "Chord Beats",
+      "options": [
+        "1/16",
+        "1/8",
+        "1/4",
+        "1/2",
+        "1",
+        "2",
+        "4",
+        "8"
+      ],
+      "default": 4
+    },
+    {
+      "key": "up",
+      "name": "Up",
+      "min": 0,
+      "max": 1,
+      "momentary": true
+    },
+    {
+      "key": "refresh",
+      "name": "Refresh",
+      "min": 0,
+      "max": 1,
+      "momentary": true
+    },
+    {
+      "key": "open",
+      "name": "Open Folder",
+      "min": 0,
+      "max": 1,
+      "momentary": true
+    },
+    {
+      "key": "load",
+      "name": "Load",
+      "min": 0,
+      "max": 1,
+      "momentary": true
+    },
+    {
+      "key": "preview",
+      "name": "Preview",
+      "min": 0,
+      "max": 1,
+      "momentary": true
+    },
+    {
+      "key": "stop_preview",
+      "name": "End Preview",
+      "min": 0,
+      "max": 1,
+      "momentary": true
+    },
+    {
+      "key": "panic",
+      "name": "Panic",
+      "min": 0,
+      "max": 1,
+      "momentary": true
+    },
+    {
+      "key": "folder",
+      "name": "Folder",
+      "min": 0,
+      "max": 1,
+      "display": "string",
+      "type": "readout"
+    },
+    {
+      "key": "status",
+      "name": "Status",
+      "min": 0,
+      "max": 1,
+      "display": "string",
+      "type": "readout"
+    },
+    {
+      "key": "output",
+      "name": "MIDI Output",
+      "min": 0,
+      "max": 1,
+      "display": "string",
+      "type": "readout"
+    },
+    {
+      "key": "row0",
+      "name": "File 1",
+      "min": 0,
+      "max": 1,
+      "display": "string",
+      "type": "readout"
+    },
+    {
+      "key": "row1",
+      "name": "File 2",
+      "min": 0,
+      "max": 1,
+      "display": "string",
+      "type": "readout"
+    },
+    {
+      "key": "row2",
+      "name": "File 3",
+      "min": 0,
+      "max": 1,
+      "display": "string",
+      "type": "readout"
+    },
+    {
+      "key": "row3",
+      "name": "File 4",
+      "min": 0,
+      "max": 1,
+      "display": "string",
+      "type": "readout"
+    },
+    {
+      "key": "row4",
+      "name": "File 5",
+      "min": 0,
+      "max": 1,
+      "display": "string",
+      "type": "readout"
+    },
+    {
+      "key": "row5",
+      "name": "File 6",
+      "min": 0,
+      "max": 1,
+      "display": "string",
+      "type": "readout"
+    },
+    {
+      "key": "row6",
+      "name": "File 7",
+      "min": 0,
+      "max": 1,
+      "display": "string",
+      "type": "readout"
+    },
+    {
+      "key": "row7",
+      "name": "File 8",
+      "min": 0,
+      "max": 1,
+      "display": "string",
+      "type": "readout"
+    },
+    {
+      "key": "clip0",
+      "name": "Track A",
+      "min": 0,
+      "max": 1,
+      "display": "string",
+      "type": "readout"
+    },
+    {
+      "key": "clip1",
+      "name": "Track B",
+      "min": 0,
+      "max": 1,
+      "display": "string",
+      "type": "readout"
+    },
+    {
+      "key": "clip2",
+      "name": "Track C",
+      "min": 0,
+      "max": 1,
+      "display": "string",
+      "type": "readout"
+    },
+    {
+      "key": "clip3",
+      "name": "Track D",
+      "min": 0,
+      "max": 1,
+      "display": "string",
+      "type": "readout"
+    }
+  ]
+}
