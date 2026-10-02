@@ -1,2 +1,2 @@
-FROM arm32v7/gcc:12
-RUN apt-get update && apt-get install -y --no-install-recommends libasound2-dev python3 python3-pil && rm -rf /var/lib/apt/lists/*
+FROM arm32v7/debian:bookworm-slim
+RUN apt-get update && apt-get install -y --no-install-recommends g++ gcc libc6-dev libasound2-dev python3 python3-pil && rm -rf /var/lib/apt/lists/*
