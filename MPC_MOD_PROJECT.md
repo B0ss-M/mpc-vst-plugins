@@ -80,11 +80,17 @@ Defer strace, debugger attachment and core-dump configuration until a specific f
 
 ## Active plugin design
 
-[QUADWEAVE design template](docs/QUADWEAVE_DESIGN.md), added 2026-10-01: a four-track rhythm/arp/melody/chord MIDI generator inspired by Plinky 12 Toadstep and Xfer Cthulhu. Includes explicit polyrhythm/polymeter clocks, harmonic conductor, six-page MPC UI, four-knob mappings and staged acceptance gates. Working name; design only, no plugin build or device verification yet.
+[QUADWEAVE design template](docs/QUADWEAVE_DESIGN.md), added 2026-10-01: a four-track rhythm/arp/melody/chord MIDI generator inspired by Plinky 12 Toadstep and Xfer Cthulhu. Includes explicit polyrhythm/polymeter clocks, harmonic conductor, six-page MPC UI, four-knob mappings and staged acceptance gates. Working name; see the playback implementation checkpoint below for current code and verification status.
 
-Design v0.2 adds core MIDI File mode: browser/audition, polyphonic SMF playback, live input-note transposition, source/target key and scale mapping, per-lane output channel remapping, and embedded clip persistence. See section 14 of QUADWEAVE_DESIGN.md. This remains specification only.
+Design v0.2 adds core MIDI File mode: browser/audition, polyphonic SMF playback, live input-note transposition, source/target key and scale mapping, per-lane output channel remapping, and embedded clip persistence. See section 14 of QUADWEAVE_DESIGN.md. The implemented playback/browser subset is recorded in the checkpoint below.
 
 Next plugin gate: test one ALSA port with four output channels and simultaneous destination playback/recording on the Live 2; test separate ports if needed. Access discovery below remains a prerequisite for on-device work.
+
+## Playback implementation checkpoint — 2026-10-02
+
+The `ports/quadweave/` implementation now contains four independent PPQ-synced players, straight/ratio speeds, Forward/Reverse/Ping-pong, MIDI and MPC `.progression` loaders, key/scale transforms, live input transpose, per-track output channels, native browser pages and embedded clip state. Read its README and STATUS for the implemented subset and test evidence. Host tests and six-page previews pass; ARM compilation and Live 2 hardware tests remain NOT RUN. The wider design remains a roadmap, not a claim that every feature exists.
+
+Next build command on the Mac: `ports/quadweave/build.sh`. Do not install an x86 host build on MPC.
 
 ## Current checkpoint
 
