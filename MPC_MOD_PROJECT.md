@@ -88,9 +88,9 @@ Next plugin gate: test one ALSA port with four output channels and simultaneous 
 
 ## Playback implementation checkpoint — 2026-10-02
 
-The `ports/quadweave/` implementation now contains four independent PPQ-synced players, straight/ratio speeds, Forward/Reverse/Ping-pong, MIDI and MPC `.progression` loaders, key/scale transforms, live input transpose, per-track output channels, native browser pages and embedded clip state. Read its README and STATUS for the implemented subset and test evidence. Host tests and six-page previews pass; ARM compilation and Live 2 hardware tests remain NOT RUN. The wider design remains a roadmap, not a claim that every feature exists.
+The `ports/quadweave/` implementation now contains four independent PPQ-synced players, straight/ratio speeds, Forward/Reverse/Ping-pong, MIDI and MPC `.progression` loaders, key/scale transforms, live input transpose, per-track output channels, native browser pages and embedded clip state. Read its README and STATUS for the implemented subset and test evidence. Host tests and six-page previews pass. ARM32 compilation and ELF inspection passed in GitHub Actions run 36995026226 (source bf251f902127c00f17e8b138a1fd8f0b0ab3e3b5); 0.1.0-test.4 is the first hardware-test ZIP. Live 2 hardware tests remain NOT RUN. The wider design remains a roadmap, not a claim that every feature exists.
 
-Next build command on the Mac: `ports/quadweave/build.sh`. Do not install an x86 host build on MPC.
+The ARM32 test ZIP includes plugin, native skin, installer/uninstaller, sample files and testing guide. Installers ask before restarting MPC; no device was accessed. Samples are copied manually to avoid replacing user collections. Rebuild on the Mac with `ports/quadweave/build.sh`.
 
 ## Current checkpoint
 
