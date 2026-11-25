@@ -217,8 +217,9 @@ for the pattern). This applies to every future port, not just ones that hit the 
       from vst.json `"sample_page"` (`tools/gen_vst.py` `sample_lines()`, `wrapper/sample_page.h`): a `"dial"` param
       stepped by the data dial and the < > keys (a `"programs"` param loads once the dial stops), up to three knobs per
       `"banks"` entry for K1-K3 with pickup (a knob moves its param only once it reaches the value), and `"lines"` readouts
-      (`"key"`, `"size"` 1-4, `"label"`, `"color"` `"#rrggbb"`; `gen_vst.py` rejects anything else). The page opens at the
-      host's first effMainsChanged, not at creation, so MPC's scan and probe instances open none; its knob, dial and preset
+      (`"key"`, `"size"` 1-4, `"label"`, `"color"` `"#rrggbb"`; `gen_vst.py` rejects anything else). The page opens on the
+      first audio block after the host's first effMainsChanged, not at creation, so MPC's scan and probe instances open
+      none, nor does the idle second instance MPC Sample 1.4 makes of a pad's Knob FX; its knob, dial and preset
       changes are applied at the start of the next audio block, never from the page's own threads.
       Space left over goes to the engine's `mpc_engine_sample_draw()` (`wrapper/engine.h`, a weak symbol; Tuner draws its
       needle there). The page needs mpc-addin-sample-draw-handler and is inert everywhere else; it is named after the

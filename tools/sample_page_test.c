@@ -1,7 +1,8 @@
 /* Offline test of a port's MPC Sample page (vst.json "sample_page", wrapper/sample_page.h), run by tools/test_sample_page.sh
  * under ThreadSanitizer. This file stands in for mpc-addin-sample-draw-handler (it exports mpc_sample_draw_api, so the
  * page opens here as it does on the device) and for the host. Checks:
- *   - no page at creation (a scan or probe instance), one page, named after the plugin, at effMainsChanged
+ *   - no page at creation (a scan or probe instance) or at effMainsChanged alone (MPC Sample 1.4's idle second instance of
+ *     a pad's Knob FX), one page, named after the plugin, once the instance processes audio
  *   - knob pickup: a knob that reaches the param's value moves it, at the next audio block
  *   - the dial: a programs dial loads the next program once still for 250 ms; another dial steps its param
  *   - the page's input thread, its drawing thread, the audio thread and a host thread setting and reading params all at
@@ -127,12 +128,16 @@ int main(void)
     fx->d(fx, 12, 0, 1, 0, 0);   /* effMainsChanged on */
     fx->d(fx, 12, 0, 0, 0, 0);
     fx->d(fx, 12, 0, 1, 0, 0);
-    CHECK(opens == 1 && !strcmp(opened_name, PLUG_NAME), "one page at effMainsChanged, named \"%s\" (%d opened)", opened_name, opens);
+    sleep_ms(300);
+    pthread_mutex_lock(&hmu); int o0 = opens; pthread_mutex_unlock(&hmu);
+    CHECK(o0 == 0, "no page at effMainsChanged before any audio (an instance MPC keeps idle opens none)");
 
     pthread_t at, ht;
     pthread_create(&at, NULL, audio, NULL);
     pthread_create(&ht, NULL, host_ui, NULL);
-    blocks_ms(200);
+    blocks_ms(400);
+    pthread_mutex_lock(&hmu); int o1 = opens; char nm[64]; snprintf(nm, sizeof nm, "%s", opened_name); pthread_mutex_unlock(&hmu);
+    CHECK(o1 == 1 && !strcmp(nm, PLUG_NAME), "one page once audio runs, named \"%s\" (%d opened)", nm, o1);
     int nf = __atomic_load_n(&frames, __ATOMIC_RELAXED);
     CHECK(nf > 0, "the page draws (%d frames)", nf);
 

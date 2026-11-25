@@ -220,7 +220,8 @@ The host test checks names, picking and the host redraw. A re-pick of the curren
 The MPC Sample's UI shows no plugin skin. vst.json `"sample_page"` gives a wrapper port its own 320x240 page through
 mpc-addin-sample-draw-handler (`wrapper/sample_page.h`): a `"dial"` param, K1-K3 `"banks"` with pickup, `"lines"` readouts,
 and the engine's optional `mpc_engine_sample_draw()` for the rest (no engine lock: read state as a screen thread would).
-Inert on every other device. The page opens at effMainsChanged (not for scan/probe instances) and posts its changes to the
+Inert on every other device. The page opens on the first audio block after effMainsChanged (not for scan/probe instances, nor
+the idle second instance MPC Sample 1.4 makes of a pad's Knob FX) and posts its changes to the
 next audio block. Offline checks: `tools/test_sample_page.sh <vst.json>` (TSan, a stand-in draw handler), and a stand-in
 "MPC Sample" host with the addin preloaded and `MPC_SDRAW_TEST_FB` as the screen (docs/PORTING.md). The desktop VST3
 wrapper ignores it.

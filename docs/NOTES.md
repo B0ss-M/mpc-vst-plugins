@@ -3113,3 +3113,19 @@ State left on the stick: `autorun.sh` (T1 tag) and one `AUTORUN_MARKER_T1-root-d
   MPC OS 3.10.1's VST2 mode.
 - MPC's main thread is named `<MPCSample>` (1.3: `MPC Sample`).
 - To check on a device: the remount, and whether 1.4's VST plugins page lists anything from `<card>/VST2 Plugins`.
+
+## 2026-11-24: MPC Sample 1.4.0.8, plugin pages on the device (device, MPC Sample)
+
+- **A pad's Knob FX is two instances.** Putting a plugin on one pad's Knob FX makes two instances; both get
+  effMainsChanged, only one ever gets processReplacing (a per-instance trace, 344 blocks of 128 frames a second at 44.1 kHz,
+  in place, one thread). In the project it is Submix 1's insert (`mixer.submixes[0].mixable.inserts`), and the pad's
+  `audioRoute` is destination 1 (submix), sub-index 0.
+- **The page waits for audio.** With a page opened at effMainsChanged, both instances registered a page under the same
+  name. `wrapper/sample_page.h` now starts a small thread at effMainsChanged that opens the page once the instance has
+  processed a block, so only the instance that plays has one (the idle one's thread exits at effClose).
+  `tools/test_sample_page.sh` checks it (no page before audio, one after).
+- **Screen refreshes cost MPC audio.** The panel is SPI; while a draw-handler page refreshed the whole screen at 15 fps, MPC's
+  audio thread ran 252 blocks a second instead of 344, heard as stutter. Refreshing only the rows that changed, in separate
+  bands, kept all 344 while scrolling RACK (mpc-addin-sample-draw-handler 1.1). Keep a page's redraws to what changes.
+- **1.4 presents with DRM atomic commits** (FB_ID and FB_DAMAGE_CLIPS on the primary plane), not page flips: a draw handler
+  older than 1.1 paints nothing on 1.4.
