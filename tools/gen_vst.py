@@ -40,6 +40,10 @@ vst.json (paths are relative to the vst.json's folder):
       "sample_page": {"dial": "preset", "banks": [{"name": "AMP", "knobs": ["gain", "bass", "treble"]}],
                       "lines": [{"key": "status", "size": 2, "label": false, "color": "#22e6ff"}], "fps": 15},
                                                  # optional: a page on the MPC Sample's screen (wrapper/sample_page.h; sample_lines())
+      "knob_fx": {"knobs": ["gain", {"key": "bass", "label": "Low"}, null], "shift_knobs": [...], "short_name": "Amp"},
+                                                 # optional: what the MPC Sample's three knobs control when the effect is a Knob FX
+                                                 # (1.4+; knob_fx()). Without it, an effect's first sample_page bank goes on the
+                                                 # knobs and its second on SHIFT
       "targets": ["armv7", "aarch64"],           # optional: device builds tools/build_port.sh makes (default ["armv7"] = Gen1 MPC / Force;
                                                  #   aarch64 = Gen2, docs/GEN2.md). `build_port.sh vst.json aarch64` builds just one.
     }
@@ -345,6 +349,57 @@ def cc_lines(cfg, params, key_to_index):
     return out
 
 
+def knob_fx(cfg, params):
+    """The MPC Sample's Knob FX mapping for plugin.json (Akai's SDK, docs/knob-fx.md; MPC Sample 1.4+): {"knobs": [...],
+    "shiftKnobs": [...], "shortName"?}, each knob {"parameter": <VST index>, "label": ...} or {} (unassigned), or None.
+    vst.json "knob_fx" sets it: "knobs" and "shift_knobs", up to 3 each, a param key, {"key", "label"} or null, and
+    "short_name" (12 characters at most). Without "knob_fx", an effect with a "sample_page" gets its first bank on the knobs
+    and its second (if any) on SHIFT, so the knobs match the page's K1-K3; anything else gets None (the Sample then puts
+    params 0-5 on the knobs). A label defaults to the param's name; keep it to about 8 characters."""
+    if not cfg.get("effect"):
+        return None
+    k2i = {p["key"]: i for i, p in enumerate(params)}
+    kf = cfg.get("knob_fx")
+    if kf is None:
+        banks = (cfg.get("sample_page") or {}).get("banks") or []
+        if not banks:
+            return None
+        kf = {"knobs": banks[0].get("knobs") or []}
+        if len(banks) > 1:
+            kf["shift_knobs"] = banks[1].get("knobs") or []
+    if not isinstance(kf, dict) or set(kf) - {"knobs", "shift_knobs", "short_name"}:
+        raise SystemExit("vst.json knob_fx: an object with \"knobs\", \"shift_knobs\" and \"short_name\" only")
+    def knob(k, where):
+        if not k:
+            return {}
+        label = None
+        if isinstance(k, dict):
+            if set(k) - {"key", "label"} or not k.get("key"):
+                raise SystemExit("vst.json knob_fx %s: %r needs a \"key\" (and an optional \"label\")" % (where, k))
+            k, label = k["key"], k.get("label")
+        if k not in k2i:
+            raise SystemExit("vst.json knob_fx %s: %r is not a parameter" % (where, k))
+        q = params[k2i[k]]
+        if q.get("momentary") or q.get("display") == "string" or q.get("step_of"):
+            raise SystemExit("vst.json knob_fx %s: %r is a trigger or a readout, not a knob" % (where, k))
+        return {"parameter": k2i[k], "label": str(label or q.get("name") or k)}
+    out = {}
+    for src, dst in (("knobs", "knobs"), ("shift_knobs", "shiftKnobs")):
+        ks = kf.get(src)
+        if ks is None:
+            continue
+        if not isinstance(ks, list) or len(ks) > 3:
+            raise SystemExit("vst.json knob_fx %s: a list of at most 3" % src)
+        out[dst] = [knob(k, src) for k in ks]
+        while out[dst] and not out[dst][-1]:
+            out[dst].pop()
+    if kf.get("short_name"):
+        if len(str(kf["short_name"])) > 12:
+            raise SystemExit("vst.json knob_fx short_name: 12 characters at most (the Sample never cuts it)")
+        out["shortName"] = str(kf["short_name"])
+    return out or None
+
+
 def sample_lines(cfg, params, key_to_index):
     """vst.json "sample_page": the port's own page on the MPC Sample (wrapper/sample_page.h; needs
     mpc-addin-sample-draw-handler on the device, and is inert anywhere else):
@@ -457,6 +512,13 @@ def main():
     if sys.argv[2:] == ["--params-h"]:
         return
     open(os.path.join(build, "pluginlist-entry.xml"), "w").write(entry(cfg) + "\n")
+    kfx, kfx_path = knob_fx(cfg, plist), os.path.join(build, "knob-fx.json")   # release.py adds it to plugin.json
+    if kfx:
+        open(kfx_path, "w").write(json.dumps(kfx, indent=2) + "\n")
+        print("knob-fx.json: " + ", ".join("%s %s" % (w, " ".join("[%d] %s" % (k["parameter"], k["label"]) if k else "-" for k in kfx[w]))
+                                          for w in ("knobs", "shiftKnobs") if w in kfx))
+    elif os.path.exists(kfx_path):
+        os.remove(kfx_path)
     if cfg.get("custom_skin"):   # the port builds its own skin folder (e.g. from data it can't ship): nothing more to do
         print("custom_skin: the port builds its skin")
         return

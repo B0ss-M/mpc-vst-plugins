@@ -231,6 +231,12 @@ for the pattern). This applies to every future port, not just ones that hit the 
       stand-in draw handler and host under ThreadSanitizer: the page opens once, pickup, the dial (a programs dial loads
       after 250 ms and stops at the last program), and input, drawing, audio and host writes at once without a data race.
       Examples: Tuner, Keyscope, Stompbox.
+    - **Knob FX on the MPC Sample (1.4+):** an effect loaded as a Knob FX gets 6 params on the Sample's three knobs (and
+      SHIFT), set by `knobs` / `shiftKnobs` in `plugin.json` (Akai's SDK, docs/knob-fx.md). vst.json `"knob_fx"` sets them:
+      `"knobs"` and `"shift_knobs"`, up to 3 each, a param key, `{"key", "label"}` or `null`, and `"short_name"` (at most 12
+      characters). Without it, an effect with a `"sample_page"` gets its first bank on the knobs and its second on SHIFT,
+      labelled with the param names. `gen_vst.py` writes `build/knob-fx.json` (and prints the mapping); `release.py` adds it to
+      `plugin.json`. Keep labels to about 8 characters. Without either, the Sample puts params 0-5 there.
 
 ## 4. Device
 - [ ] The plugin is one folder, `/sdcard/Synths/<vendor> - VST - <name>/`: the `.so`, `Plugin Skins/`, `version.xml` and any data next to the `.so`.
