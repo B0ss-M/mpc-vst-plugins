@@ -3122,8 +3122,8 @@ State left on the stick: `autorun.sh` (T1 tag) and one `AUTORUN_MARKER_T1-root-d
   `audioRoute` is destination 1 (submix), sub-index 0.
 - **The page waits for audio.** With a page opened at effMainsChanged, both instances registered a page under the same
   name. `wrapper/sample_page.h` now starts a small thread at effMainsChanged that opens the page once the instance has
-  processed a block, so only the instance that plays has one (the idle one's thread exits at effClose).
-  `tools/test_sample_page.sh` checks it (no page before audio, one after).
+  processed a block, so only the instance that plays has one (the idle one's thread exits at effClose). Offline only so
+  far: `tools/test_sample_page.sh` checks it (no page before audio, one after); not yet isolated on the device.
 - **Screen refreshes cost MPC audio.** The panel is SPI; while a draw-handler page refreshed the whole screen at 15 fps, MPC's
   audio thread ran 252 blocks a second instead of 344, heard as stutter. Refreshing only the rows that changed, in separate
   bands, kept all 344 while scrolling RACK (mpc-addin-sample-draw-handler 1.1). Keep a page's redraws to what changes.
