@@ -1,0 +1,19 @@
+{
+  "id": "segeda-fet-compressor",
+  "name": "FET Compressor",
+  "author": "SoundBot",
+  "repo": "SoundBot/mpc-fet-compressor",
+  "kind": "effect",
+  "style": "dynamics",
+  "tags": [
+    "compressor",
+    "fet",
+    "limiter",
+    "vu-meter",
+    "parallel",
+    "dynamics"
+  ],
+  "license": "MIT",
+  "summary": "Classic FET-style peak compressor with an analog VU meter: 4/8/12/20:1 ratios plus all-buttons mode, FET colour, parallel mix and sidechain high-pass. Comes with a variety of presets for vocals, drums, bass, guitar, keys, synths and the mix bus.",
+  "screenshot": "https://raw.githubusercontent.com/SoundBot/mpc-fet-compressor/v1.4.1/docs/screenshots/segeda-fet-compressor.png"
+}
