@@ -70,6 +70,8 @@ the screen notes 12/13/14, dial CC 100 (relative, 1 = +1, 127 = -1) and press no
 2. Link for **glibc 2.39** at most. A host cross-compiler with a newer glibc leaks `libmvec` symbols (NOTES 2026-11-04: NAM
    was rebuilt in a glibc 2.36 container for that reason).
 3. Add an on-screen page only if you use the draw handler's API (`sample_page` in `vst.json`, offline only so far).
+   On 1.4 an effect is a Knob FX with six params on the knobs: map them with `knob_fx` in `vst.json`, or let the page's
+   first two banks set them (`docs/PORTING.md`, Knob FX).
 4. In the catalog, mark the entry's device limits honestly (Sample-capable or not, and a `Verified Sample` badge only after a
    device check): `docs/CATALOG.md`, NOTES 2026-11-05.
 5. Test on the device with the plugin in a project, MPC stopped while you edit the working copy, `.rack-backup` kept.

@@ -81,6 +81,17 @@ class T(unittest.TestCase):
         self.assertEqual((spj["file32"], spj["file64"]), ("VST/wob-synth-arm32.so", "VST/wob-synth-arm64.so"))
         self.assertIn(F + "/VST/wob-synth-arm64.so", zs.namelist())
 
+    def test_an_effects_knob_fx_mapping_is_kept(self):
+        """plugin.json's knobs, shiftKnobs and shortName (the MPC Sample's Knob FX) survive release.py writing plugin.json again."""
+        k = {"knobs": [{"parameter": 2, "label": "Time"}, {}, {"parameter": 7, "label": "Mix"}], "shiftKnobs": [{"parameter": 4, "label": "Low Cut"}],
+             "shortName": "Wob"}
+        r = run(sdk_folder(self.d, dict(k, kind="effect", numInputs=2, category="Effect")), "--version", "1.2.0", "--id", "wob-synth",
+                "--repo", "acme/wob", "-o", self.out)
+        self.assertEqual(r.returncode, 0, r.stderr + r.stdout)
+        for arch in ("armv7", "aarch64"):
+            pj = json.loads(zipfile.ZipFile(os.path.join(self.out, "Wob-Synth-1.2.0-mpc-%s.zip" % arch)).read("Wob-Synth-1.2.0/portable/%s/plugin.json" % F))
+            self.assertEqual({x: pj.get(x) for x in k}, k, arch)
+
     def test_catalog_check_accepts_them(self):
         r = run(sdk_folder(self.d), "--version", "1.2.0", "--id", "wob-synth", "--repo", "acme/wob", "--license", "MIT", "-o", self.out)
         self.assertEqual(r.returncode, 0, r.stderr + r.stdout)

@@ -7,9 +7,9 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ['catalog/**', 'tools/catalog_*.py', 'tools/app_*.py', 'tools/catalog_site/**', 'tools/skin_compat.py', 'tools/skin_roles_2x.json', 'tools/test_skin_compat.py', 'tools/sdk_*.py', 'tools/test_sdk_*.py', 'tools/release.py', 'tools/release/**']
+    paths: ['catalog/**', 'tools/catalog_*.py', 'tools/app_*.py', 'tools/catalog_site/**', 'tools/skin_compat.py', 'tools/skin_roles_2x.json', 'tools/test_skin_compat.py', 'tools/sdk_*.py', 'tools/test_sdk_*.py', 'tools/release.py', 'tools/release/**', 'tools/gen_vst.py', 'tools/test_knob_fx.py']
   pull_request:
-    paths: ['catalog/**', 'tools/catalog_*.py', 'tools/app_*.py', 'tools/catalog_site/**', 'tools/skin_compat.py', 'tools/skin_roles_2x.json', 'tools/test_skin_compat.py', 'tools/sdk_*.py', 'tools/test_sdk_*.py', 'tools/release.py', 'tools/release/**']
+    paths: ['catalog/**', 'tools/catalog_*.py', 'tools/app_*.py', 'tools/catalog_site/**', 'tools/skin_compat.py', 'tools/skin_roles_2x.json', 'tools/test_skin_compat.py', 'tools/sdk_*.py', 'tools/test_sdk_*.py', 'tools/release.py', 'tools/release/**', 'tools/gen_vst.py', 'tools/test_knob_fx.py']
 permissions:
   contents: write   # the sdk-converted release (converted SDK zips); everything else only reads
   issues: write
@@ -30,6 +30,8 @@ jobs:
         run: node tools/test_drivewrite.mjs
       - name: SDK-format zip tests
         run: python3 tools/test_sdk_zip.py && python3 tools/test_sdk_release.py
+      - name: Knob FX mapping tests
+        run: python3 tools/test_knob_fx.py
       - name: Site downloads tests
         run: python3 tools/test_site_downloads.py
       - name: Skin compatibility tests

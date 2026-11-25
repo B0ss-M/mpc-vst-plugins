@@ -96,6 +96,9 @@ def convert(src, version, out, plugin_id=None, repo=None, license=None, rest=())
             so = os.path.join(stage, os.path.basename(rel))
             shutil.copy2(os.path.join(folder, rel), so)
             entry = os.path.join(stage, "entry.xml")
+            kfx = {k: pj[k] for k in ("knobs", "shiftKnobs", "shortName") if k in pj}   # the MPC Sample's Knob FX knobs: kept
+            if kfx:
+                open(os.path.join(stage, "knob-fx.json"), "w", newline="\n").write(json.dumps(kfx, indent=2) + "\n")
             outs = int(pj.get("numOutputs", 2))
             ins = int(pj.get("numInputs", 2 if kind == "effect" else 0))
             esc = lambda t: str(t).replace("&", "&amp;").replace('"', "&quot;").replace("<", "&lt;").replace(">", "&gt;")

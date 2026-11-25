@@ -3129,3 +3129,10 @@ State left on the stick: `autorun.sh` (T1 tag) and one `AUTORUN_MARKER_T1-root-d
   bands, kept all 344 while scrolling RACK (mpc-addin-sample-draw-handler 1.1). Keep a page's redraws to what changes.
 - **1.4 presents with DRM atomic commits** (FB_ID and FB_DAMAGE_CLIPS on the primary plane), not page flips: a draw handler
   older than 1.1 paints nothing on 1.4.
+
+## 2026-11-24: Knob FX knobs in plugin.json (offline)
+
+- Akai's SDK (docs/knob-fx.md, MPC Sample 1.4+) maps a Knob FX's three knobs and the three SHIFT knobs with `knobs` /
+  `shiftKnobs` in `plugin.json`; without them the Sample puts params 0-5 there, labelled `Param 1`-`Param 6`. Releases had
+  neither. `gen_vst.py` now writes `build/knob-fx.json` from vst.json `"knob_fx"`, or from an effect's `"sample_page"` banks,
+  and `release.py` adds it to `plugin.json`; `sdk_release.py` keeps an SDK plugin's own. Not yet checked on a device.

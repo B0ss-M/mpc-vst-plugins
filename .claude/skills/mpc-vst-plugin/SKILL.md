@@ -224,7 +224,8 @@ Inert on every other device. The page opens on the first audio block after effMa
 the idle second instance MPC Sample 1.4 makes of a pad's Knob FX) and posts its changes to the
 next audio block. Offline checks: `tools/test_sample_page.sh <vst.json>` (TSan, a stand-in draw handler), and a stand-in
 "MPC Sample" host with the addin preloaded and `MPC_SDRAW_TEST_FB` as the screen (docs/PORTING.md). The desktop VST3
-wrapper ignores it.
+wrapper ignores it. As a Knob FX on MPC Sample 1.4, an effect's three knobs (and SHIFT) follow vst.json `"knob_fx"`, or else
+the page's first two banks: `gen_vst.py` writes `build/knob-fx.json` and `release.py` puts it in `plugin.json` (PORTING.md).
 
 ## MIDI control and the engine lock
 CC 20-35 drive the first page's Q-Links, NRPN n sets parameter n (vst.json `"cc"`/`"nrpn": false` to turn off; the
