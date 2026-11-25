@@ -202,6 +202,7 @@ typedef struct {
     int update_wait;         /* frames until another audioMasterUpdateDisplay may be sent (see housekeeping) */
     int program;             /* NPRESETS: the preset last picked (not in the engine's state; 0 after a reload) */
     void *spage;             /* SAMPLE_PAGE: the page on the MPC Sample's screen (sample_page.h), or NULL */
+    int audio_seen;          /* __atomic: run_block has run once (the page opens only then: sample_page.h) */
 #ifdef SAMPLE_PAGE
     /* The page runs on the draw handler's threads; what it changes is posted here and applied at the start of the next
      * block (page_apply), on the thread that already applies MIDI CCs and the held parameter 0, so the host-side
@@ -707,6 +708,7 @@ static void run_block(AEffect *e, float **in, float **out, int32_t n, int accumu
     flush_pend0(e);   /* parameter 0, set since the last block (setParameter) */
 #ifdef SAMPLE_PAGE
     page_apply(w);    /* knob, dial and preset changes from the page on the MPC Sample's screen */
+    if (!w->audio_seen) __atomic_store_n(&w->audio_seen, 1, __ATOMIC_RELEASE);
 #endif
     housekeeping(e, n);
     /* A conforming host passes real input to an effect, but a plugin scanner (and the device's own load
@@ -744,6 +746,7 @@ static void run_block(AEffect *e, float **out, int32_t n, int accumulate) {
     flush_pend0(e);   /* parameter 0, set since the last block (setParameter) */
 #ifdef SAMPLE_PAGE
     page_apply(w);    /* knob, dial and preset changes from the page on the MPC Sample's screen */
+    if (!w->audio_seen) __atomic_store_n(&w->audio_seen, 1, __ATOMIC_RELEASE);
 #endif
     housekeeping(e, n);
 #if SAMPLE_ACCURATE
@@ -946,8 +949,8 @@ static intptr_t dispatcher(AEffect *e, int32_t op, int32_t idx, intptr_t v, void
         return 1;
 #ifdef SAMPLE_PAGE
     case effMainsChanged:
-        /* The page opens when the host first gets the instance ready to play, not at creation: a scan or probe instance
-         * MPC makes and drops would otherwise open a page under the same name (the draw handler shows the newest). */
+        /* The page's wait starts when the host first gets the instance ready to play, not at creation (a scan or probe
+         * instance MPC makes and drops), and the page itself opens on the first audio block (sample_page.h). */
         if (v && !w->spage) w->spage = sample_page_open(w);
         return 1;
     case effSetSampleRate: case effSetBlockSize: return 1;

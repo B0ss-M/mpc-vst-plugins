@@ -18,7 +18,11 @@
  * Threads: input arrives on the draw handler's input thread, frames are drawn on the page's own thread. Neither sets a
  * param or loads a preset itself: page_post() and page_post_prog() leave the change in the wrap_t, and page_apply() makes
  * it at the start of the next audio block, where the wrapper applies MIDI CCs and the host's held parameter 0. sp->mu
- * guards only the page's own fields and is never held while drawing. The page opens at effMainsChanged (vst2_wrap.c). */
+ * guards only the page's own fields and is never held while drawing.
+ *
+ * When it opens: effMainsChanged starts a thread that waits for the instance's first audio block and only then opens the
+ * page. MPC Sample 1.4 makes two instances of a pad's Knob FX and runs audio through one (device, 2026-11-24): the other
+ * never gets a page, so RACK's PAGES and the page button list only the instance that is playing. */
 #include "sample_draw.h"
 
 #ifndef SAMPLE_FPS
@@ -41,6 +45,8 @@ typedef struct {
     int settle[3];           /* set_v is the posted value: take the applied one once page_apply has run */
     int target, target_set;  /* the dial on a preset list: the preset to load, once it has been still for 250 ms */
     long long target_ms;
+    pthread_t wait_th;       /* waits for the first audio block, then opens the page */
+    int run, opened;         /* __atomic: the wait goes on; the page is open */
 } sample_page_t;
 
 static __attribute__((unused)) long long sp_now_ms(void) { struct timespec t; clock_gettime(CLOCK_MONOTONIC, &t); return t.tv_sec * 1000LL + t.tv_nsec / 1000000; }
@@ -318,17 +324,29 @@ static void sp_render(void *user, sdc_canvas *cv)
     }
 }
 
+/* the wait: open the page once the instance has processed audio (run_block sets w->audio_seen) */
+static void *sp_wait(void *arg)
+{
+    sample_page_t *sp = arg;
+    while (__atomic_load_n(&sp->run, __ATOMIC_ACQUIRE) && !__atomic_load_n(&sp->w->audio_seen, __ATOMIC_ACQUIRE))
+        sdc_sleep_ms(100);
+    if (!__atomic_load_n(&sp->run, __ATOMIC_ACQUIRE)) return NULL;
+    if (sdc_page_open(&sp->page, PLUG_NAME, SAMPLE_FPS, sp_render, sp) != 0) return NULL;   /* not on an MPC Sample with the addin */
+    sdc_page_set_input(&sp->page, sp_input, sp);
+    __atomic_store_n(&sp->opened, 1, __ATOMIC_RELEASE);
+    return NULL;
+}
+
 static sample_page_t *sample_page_open(wrap_t *w)
 {
+    if (!sdc_api()) return NULL;   /* no draw handler here: nothing to wait for */
     sample_page_t *sp = calloc(1, sizeof *sp);
     if (!sp) return NULL;
     sp->w = w;
     pthread_mutex_init(&sp->mu, NULL);
     for (int k = 0; k < 3; k++) sp->at[k] = -1;
-    if (sdc_page_open(&sp->page, PLUG_NAME, SAMPLE_FPS, sp_render, sp) != 0) {   /* not on an MPC Sample with the addin */
-        pthread_mutex_destroy(&sp->mu); free(sp); return NULL;
-    }
-    sdc_page_set_input(&sp->page, sp_input, sp);
+    __atomic_store_n(&sp->run, 1, __ATOMIC_RELEASE);
+    if (pthread_create(&sp->wait_th, NULL, sp_wait, sp) != 0) { pthread_mutex_destroy(&sp->mu); free(sp); return NULL; }
     return sp;
 }
 
@@ -336,7 +354,9 @@ static sample_page_t *sample_page_open(wrap_t *w)
 static void sample_page_close(sample_page_t *sp)
 {
     if (!sp) return;
-    sdc_page_close(&sp->page);
+    __atomic_store_n(&sp->run, 0, __ATOMIC_RELEASE);
+    pthread_join(sp->wait_th, NULL);   /* the page is open, or will never be, once this returns */
+    if (__atomic_load_n(&sp->opened, __ATOMIC_ACQUIRE)) sdc_page_close(&sp->page);
     pthread_mutex_destroy(&sp->mu);
     free(sp);
 }
